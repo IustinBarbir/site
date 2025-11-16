@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wonderland — Walkthrough</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Wonderland — Walkthrough</h1>
+
+        <p><strong>Target:</strong> TryHackMe — Wonderland</p>
+
+        <h2>Overview</h2>
+        <p>Fall down the rabbit hole and enter wonderland.</p>
+        <p><strong>Goals:</strong></p>
+        <ul>
+            <li>Obtain the flag in <code>user.txt</code></li>
+            <li>Escalate privileges and obtain the flag in <code>root.txt</code></li>
+        </ul>
+
+        <h2>Initial Recon</h2>
+        <p>I started by scanning the machine with Nmap:</p>
+        <pre><code>nmap -sC $IP</code></pre>
+
+        <p>The scan showed that ports <code>22</code> (SSH) and <code>80</code> (HTTP) were open. I checked the website, but there wasn’t much to see.</p>
+
+        <h2>Directory Enumeration</h2>
+        <p>Next, I used Gobuster to enumerate directories:</p>
+        <pre><code>gobuster dir -e -u $IP -w /usr/share/wordlists/dirb/common.txt</code></pre>
+
+        <p>Gobuster returned a few interesting results:</p>
+        <ul>
+            <li><code>/img</code> — containing <code>alice_door.jpg</code>, <code>alice_door.png</code>, <code>white_rabbit_1.jpg</code></li>
+            <li><code>/index</code></li>
+            <li><code>/r</code> — showing the text: "Keep Going." and the quote: “Would you tell me, please, which way I ought to go from here?”</li>
+        </ul>
+
+        <h2>Chasing the Rabbit</h2>
+        <p>I continued enumerating deeper paths. Running Gobuster on <code>$IP/r</code> revealed <code>/a</code>. Repeating the process for <code>/r/a</code> revealed <code>/b</code>, and so on.</p>
+        <p>Eventually, the sequence spelled out <strong>RABBIT</strong>, which led me to a new page.</p>
+
+        <h2>Finding Hidden Credentials</h2>
+        <p>Checking the page source, I noticed a hidden HTML element:</p>
+        <pre><code>&lt;p style="display: none;"&gt;alice:HowDothTheLittleCrocodileImproveHisShiningTail&lt;/p&gt;</code></pre>
+        <p>This looked like a set of SSH credentials, so I tried them—and they worked.</p>
+
+        <h2>SSH Access</h2>
+        <p>After logging in, I listed the files in the home directory and saw <code>root.txt</code> (which I couldn’t read) and a Python script. I also didn’t have permission to access other users' folders inside <code>/home</code>.</p>
+
+        <h2>Getting the User Flag</h2>
+        <p>I got stuck for a while here and eventually looked for hints. Although I couldn’t read <code>/root/root.txt</code>, I assumed the user flag might be stored under <code>/root</code>. I tried:</p>
+        <pre><code>cat /root/user.txt</code></pre>
+        <p>That worked and gave me the user flag</p>
+
+        <h2>Privilege Escalation</h2>
+        <p>Next, I checked what I could run with <code>sudo</code>:</p>
+        <pre><code>sudo -l</code></pre>
+        <p>The output showed that I could run the Python script as the user <code>rabbit</code>.</p>
+
+        <h2>Investigating the Python Script</h2>
+        <p>I opened the script to understand what it did. After looking it over and doing some research, I realized that the script was vulnerable to <strong>library hijacking</strong>, which I could use to escalate privileges.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

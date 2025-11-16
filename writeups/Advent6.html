@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Cyber — Day 6</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Advent of Cyber — Day 6</h1>
+
+        <p><strong>Target:</strong> TryHackMe — Advent of Cyber (Day 6)</p>
+
+        <h2>Overview</h2>
+        <p>The task revolved around analyzing an email using a provided tool and identifying several details inside the file.</p>
+
+        <h2>Analyzing the Email</h2>
+        <p>The room already provided the command needed:</p>
+
+        <pre><code>emlAnalyzer -i ./Desktop/Urgent:.eml --header --html -u --text --extract-all</code></pre>
+
+        <h2>Message ID</h2>
+        <p>The MessageID appeared to be Base64 encoded:</p>
+
+        <pre><code>&lt;QW9DMjAyMl9FbWFpbF9BbmFseXNpcw==&gt;</code></pre>
+
+        <p>Decoding it yielded:</p>
+        <pre><code>AoC2022_Email_Analysis</code></pre>
+
+        <h2>Additional Tasks</h2>
+        <p><code>emailrep.io</code> now requires an account, so I looked up the answer since I completed the rest of the analysis manually.</p>
+
+        <p>The SHA‑256 hash was obtained by running:</p>
+
+        <pre><code>sha256sum Division_of_labour-Load_share_plan.doc</code></pre>
+
+        <p>VirusTotal has changed since the challenge was created, so the detection categories are now in a different order. The answer expected in the room corresponds to the older layout, specifically the Defense Evasion tactic.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

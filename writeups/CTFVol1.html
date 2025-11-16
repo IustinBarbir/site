@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Collection Vol.1 — Write-Up</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>CTF Collection Vol.1</h1>
+
+        <p><strong>What does the base said?</strong></p>
+        <pre><code>$ echo VEhNe2p1NTdfZDNjMGQzXzdoM19iNDUzfQ== | base64 -d</code></pre>
+
+        <p><strong>Meta meta</strong></p>
+        <pre><code>$ strings File</code></pre>
+
+        <p>Mon, are we going to be okay? Using steghide here:</p>
+        <pre><code>steghide extract -sf Extinction_1577976250757.jpg -xf Flag.txt
+no passphrase</code></pre>
+
+        <p><strong>Erm......Magick</strong><br>
+        select the text, the flag is right after the "?"<br>
+        In my case it was already visible. I am assuming this is because of dark mode from THM</p>
+
+        <p><strong>QRrrrr</strong><br>
+        just scan the code using <a href="https://scanqr.org/" target="_blank">https://scanqr.org/</a></p>
+
+        <p><strong>Reverse it or read it?</strong><br>
+        No need to reverse it yet, as the flag appears after doing strings on the file</p>
+
+        <p><strong>Another decoding stuff</strong><br>
+        Went to CyberChef and used Magic. Decoded from base58.</p>
+
+        <p><strong>Left or right</strong></p>
+        <pre><code>MAF{atbe_max_vtxltk}</code></pre>
+        <p>I know the flag is supposed to be written like CTF{flag}, so I can find the algorithm. Easier than expected, because the flag is given with the default shift (7) on <a href="https://cryptii.com/pipes/caesar-cipher" target="_blank">https://cryptii.com/pipes/caesar-cipher</a></p>
+
+        <p><strong>Make a comment</strong><br>
+        As the title suggests, the flag can be found in the comments when inspecting element.</p>
+
+        <p><strong>Can you fix it?</strong></p>
+        <pre><code>└─$ xxd --plain spoil_1577979329740.png| head</code></pre>
+        <p>Searched for magic bytes for a png, then add those and go to CyberChef.</p>
+
+        <p><strong>Read it</strong><br>
+        Does not help that this challenge is like 5 years old because using google dorking will bring much more results. Also, the hint no longer works since they got that new AI agent. AI AI AI AI AI AI AI AI.<br>
+        site:'reddit.com' & intext:"THM"<br>
+        I just got the flag from the internet can't be wasting time with this.</p>
+
+        <p><strong>Spin my head</strong><br>
+        <a href="https://www.dcode.fr/cipher-identifier" target="_blank">https://www.dcode.fr/cipher-identifier</a><br>
+        apparently this is Brainfuck. yep, same site will decode that.</p>
+
+        <p><strong>An exclusive!</strong><br>
+        Again, since the room is old, I cannot access the hint, so I looked for the hint online: S1 XOR S2 <a href="https://xor.pw/#" target="_blank">https://xor.pw/#</a><br>
+        then CyberChef to decode it from Hex.</p>
+
+        <p><strong>Binary walk</strong></p>
+        <pre><code>└─$ binwalk -B hell_1578018688127.jpg
+
+DECIMAL       HEXADECIMAL     DESCRIPTION
+--------------------------------------------------------------------------------
+0             0x0             JPEG image data, JFIF standard 1.02
+30            0x1E            TIFF image data, big-endian, offset of first image directory: 8
+265845        0x40E75         Zip archive data, at least v2.0 to extract, uncompressed size: 69, name: hello_there.txt
+266099        0x40F73         End of Zip archive, footer length: 22</code></pre>
+
+        <p>so it's a zip file, not a jpg.</p>
+        <pre><code>cp hell_1578018688127.jpg hell_1578018688127.zip
+then unzip
+the file hello_there.txt contains the flag</code></pre>
+
+        <p><strong>Darkness</strong><br>
+        Using stegsolve.jar as per the hint and move until the flag appears.</p>
+
+        <p><strong>A sounding QR</strong><br>
+        same as before, scan the QR and listen (or go to comments, people have written the flag there).</p>
+
+        <p><strong>Dig up the past</strong><br>
+        waybackmachine to 2nd Jan 2020 (if it works. For me it did not. The flag is <code>THM{ch3ck_th3_h4ckb4ck}</code>)</p>
+
+        <p><strong>Uncrackable</strong><br>
+        <a href="https://www.dcode.fr/cipher-identifier" target="_blank">https://www.dcode.fr/cipher-identifier</a> says it is most likely Vigenere cipher. Can be cracked using CyberChef, with the key THM.</p>
+
+        <p><strong>Small bases</strong><br>
+        According to the hint, convert from dec to hex and from hex to ascii. Use this: <a href="https://www.rapidtables.com/convert/number/hex-to-ascii.html?x=581695969015253365094191591547859387620042736036246486373595515576333693" target="_blank">https://www.rapidtables.com/convert/number/hex-to-ascii.html</a></p>
+
+        <p><strong>Read the packet</strong><br>
+        Open with Wireshark. Notice HTTP get /flag.txt and follow HTTP stream.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

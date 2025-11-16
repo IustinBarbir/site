@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Projects | Iustin Barbir</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="projects.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR STÂNGA -->
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="index.html">Home</a>
+    <a href="about.html">About Me</a>
+    <a href="projects.html" class="active">Projects</a>
+    <a href="writeups.html">Write-Ups</a>
+    <a href="contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<!-- CONȚINUT PRINCIPAL -->
+<div class="content">
+    <h1>Projects</h1>
+    <p>Here are some projects I've worked on. Use the pagination to navigate through them.</p>
+
+    <!-- LISTA PROIECTE -->
+    <div class="project-list" id="project-list">
+        <div class="project-card-wide">
+            <h3>Asteroids</h3>
+            <p>Python game created in order to practice OOP concepts. Guided project from Boot.dev</p>
+            <a href="https://github.com/IustinBarbir/asteroids" class="github-btn" target="_blank">View on GitHub</a>
+        </div>
+        <div class="project-card-wide">
+            <h3>BookBot</h3>
+            <p>Python project that reads a file and prints out the character counts, sorted from most frequent to least frequent.</p>
+            <a href="https://github.com/IustinBarbir/bookbot" class="github-btn" target="_blank">View on GitHub</a>
+        </div>
+        <div class="project-card-wide">
+            <h3>Email Spam Filter</h3>
+            <p>A machine learning-based email classifier using Naïve Bayes and TF-IDF. Trained on real-world data to distinguish spam from clean emails with high accuracy.</p>
+            <a href="https://github.com/IustinBarbir/Email-spam-filter" class="github-btn" target="_blank">View on GitHub</a>
+        </div>
+        <div class="project-card-wide">
+            <h3>DNS Spoofing</h3>
+            <p>DNS spoofing attack performed on VMs with Ettercap. Redirects user traffic from a legitimate website to a fake Apache server hosted by the attacker. Done as part of the "Network Security" course.</p>
+            <a href="https://github.com/IustinBarbir/DNS-Spoofing" class="github-btn" target="_blank">View on GitHub</a>
+        </div>
+        <div class="project-card-wide">
+            <h3>Password Manager</h3>
+            <p>Simple password manager built with Python. Allows users to store, manage, and retrieve passwords. Includes features like password generation, clipboard copying, and a recovery mechanism.</p>
+            <a href="https://github.com/IustinBarbir/Password-Manager" class="github-btn" target="_blank">View on GitHub</a>
+        </div>
+        <div class="project-card-wide">
+            <h3>Syndrome Decoding Algorithms: Leon’s ISD & Stern’s ISD</h3>
+            <p>Simulates encryption and decryption processes using Stern’s ISD algorithm, ensuring secure communication.</p>
+            <a href="https://github.com/IustinBarbir/ASET-Project" class="github-btn" target="_blank">View on GitHub</a>
+        </div>
+        <div class="project-card-wide">
+            <h3>Threadybeans.com</h3>
+            <p>Ecommerce website that I created on Shopify and that I maintain, periodically update, and make changes for a client.</p>
+            <a href="https://threadybeans.com" class="github-btn" target="_blank">Visit Website</a>
+        </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination"></div>
+</div>
+
+<!-- SIDEBAR DREAPTA - RECENTLY UPDATED -->
+<section class="recently-updated">
+    <h3>Recently Updated</h3>
+    <ul>
+        <li><a href="https://github.com/IustinBarbir/asteroids">Project: Asteroids</a></li>
+        <li><a href="writeups/DAV.html">THM - DAV</a></li>
+        <li><a href="writeups/CTFVol2.html">THM - CTF Collection Vol.2</a></li>
+        <li><a href="writeups/ChillHack.html">THM - Chill Hack</a></li>
+        <li><a href="writeups/CTFVol1.html">THM - CTF Collection Vol.1</a></li>
+    </ul>
+</section>
+
+</body>
+</html>

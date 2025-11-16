@@ -1,0 +1,66 @@
+/* Page container */
+#writeup-container {
+    padding: 5rem 2rem;
+    color: #e5e5e5;
+    background-color: #1a1b20;
+}
+
+.writeup-content {
+    max-width: 900px;
+    margin: auto;
+}
+
+/* Titles */
+.writeup-content h1 {
+    font-size: 2.7rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #ff3b3b;
+}
+
+.writeup-content h2 {
+    margin-top: 2rem;
+    margin-bottom: .8rem;
+    font-size: 1.8rem;
+    color: #ff3b3b;
+}
+
+/* Paragraphs & Lists */
+.writeup-content p,
+.writeup-content li {
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+.writeup-content ul {
+    margin-left: 1.3rem;
+}
+
+/* Command / code blocks */
+pre {
+    background-color: #111;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #272727;
+}
+
+code {
+    font-family: "Fira Code", monospace;
+    color: #ff3b3b;
+    font-size: .95rem;
+}
+
+#writeup-container {
+    padding: 80px 340px 80px 260px; /* top-right-bottom-left */
+    color: #e5e5e5;
+    max-width: 900px;
+    margin: auto; /* center între sidebars */
+}
+
+#writeup-container pre {
+    overflow-x: auto;
+}
+
