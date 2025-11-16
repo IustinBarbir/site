@@ -1,11 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap');
 
+/* RESET & GLOBAL */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
 body {
     margin: 0;
     background-color: #0e0f14;
     color: #e6e6e6;
     font-family: 'Ubuntu Mono', monospace;
     display: flex;
+    min-height: 100vh;
+    line-height: 1.4;
 }
 
 /* SIDEBAR */
@@ -20,13 +31,15 @@ body {
     position: fixed;
     left: 0;
     top: 0;
+    z-index: 20;
 }
 
 .sidebar h2 {
     text-align: center;
-    margin-bottom: 40px;
+    margin: 0 12px 40px 12px;
     color: #ff3b3b;
     letter-spacing: 1px;
+    font-size: 20px;
 }
 
 .sidebar a {
@@ -36,6 +49,8 @@ body {
     font-size: 18px;
     transition: 0.25s;
     border-left: 4px solid transparent;
+    display: block;
+    white-space: nowrap;
 }
 
 .sidebar a:hover {
@@ -44,17 +59,56 @@ body {
     border-left: 4px solid #ff3b3b;
 }
 
-/* CONTENT */
+.sidebar a.active {
+    color: #ff3b3b;
+    font-weight: bold;
+    background-color: #191a22;
+    border-left: 4px solid #ff3b3b;
+}
+
+/* SOCIAL ICONS IN SIDEBAR */
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    position: relative;
+    top: -15px;
+}
+
+.social-icons img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.85;
+    transition: 0.25s;
+    filter: invert(26%) sepia(92%) saturate(4476%) hue-rotate(354deg) brightness(96%) contrast(103%);
+}
+
+.social-icons img:hover {
+    opacity: 1;
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 6px #ff3b3b);
+}
+
+/* CONTENT (MAIN) */
 .content {
+    /* spacing to avoid overlapping with fixed sidebars */
     padding: 80px;
-    padding-left: 300px;
+    padding-left: 300px; /* space for left sidebar */
     flex-grow: 1;
-    margin-right: 330px; /* spațiu pentru sidebar-ul din dreapta */
+    margin-right: 330px; /* spațiu pentru right sidebar */
+    display: flex;
+    flex-direction: column;
+    min-height: 80vh;
 }
 
 h1 {
     font-size: 42px;
     margin-bottom: 12px;
+}
+
+.content h1 {
+    color: #ff3b3b;
 }
 
 p {
@@ -73,6 +127,7 @@ p {
     margin-top: 60px;
     border: 1px solid #272727;
     box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    overflow: hidden;
 }
 
 /* BARĂ SUPERIOARĂ */
@@ -105,18 +160,18 @@ p {
 
 .user { color: #d1d1d1; margin-left: 6px; font-size: 14px; }
 
-/* TERMINAL BODY - culoare mai evidentă și border jos */
+/* TERMINAL BODY */
 .terminalBody {
-    background: #1a1c25; /* mai evident față de fundal */
+    background: #1a1c25;
     height: calc(100% - 30px);
     padding: 12px;
     overflow-y: auto;
     color: #d1d1d1;
     font-size: 16px;
     line-height: 22px;
-    border-bottom: 1px solid #272727; /* margine jos */
-    border-left: 1px solid #272727;   /* margine stanga */
-    border-right: 1px solid #272727;  /* margine dreapta */
+    border-bottom: 1px solid #272727;
+    border-left: 1px solid #272727;
+    border-right: 1px solid #272727;
     border-radius: 0 0 6px 6px;
     box-sizing: border-box;
 }
@@ -127,8 +182,8 @@ p {
     align-items: center;
 }
 
-.promptUser { color: #ff3b3b; }
-.promptLocation { color: #4878c0; }
+.promptUser { color: #ff3b3b; margin-right:6px; }
+.promptLocation { color: #4878c0; margin-right:6px; }
 .promptBling { color: #dddddd; margin-right: 6px; }
 
 .terminalInput {
@@ -145,73 +200,17 @@ p {
     margin-bottom: 4px;
 }
 
-
-/* about page */
-
-.certifications-content {
-    margin-top: 40px;
-    margin-bottom: 40px;
-}
-
-.certifications-content h2 {
-    margin-bottom: 20px;
-}
-
-.certification-logo {
-    width: 60px;
-    height: auto;
-    vertical-align: middle;
-    margin-left: 10px;
-}
-
-.skills-icons {
-    display: grid;
-    grid-template-columns: repeat(5, auto); /* 5 skill-uri pe rând, lățime automată */
-    justify-content: start; /* aliniere la stânga */
-    gap: 5px 15px; /* vertical 5px, orizontal 15px */
-    margin-top: 20px;
-    margin-bottom: 40px;
-}
-
-.skill {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* imagine și text centrate pe coloană */
-    text-align: center;
-}
-
-.skill img {
-    width: 50px;   /* mai mic pentru a încăpea toate imagini pe rând */
-    height: 50px;
-    object-fit: contain;
-    margin-bottom: 4px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .skills-icons {
-        grid-template-columns: repeat(3, auto);
-        gap: 5px 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    .skills-icons {
-        grid-template-columns: repeat(2, auto);
-        gap: 5px 8px;
-    }
-}
-
 /* RIGHT SIDEBAR - RECENTLY UPDATED */
 .recently-updated {
     position: fixed;
-    right: 0;
-    top: 80px; /* astfel nu urcă până în vârf, arată mai elegant */
+    right: 20px;
+    top: 100px;
     width: 300px;
-    padding-left: 25px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    border-left: 1px solid #2a2a2a; /* linie discretă */
+    background: transparent;
+    border-left: 1px solid #2a2a2a;
+    padding-left: 20px;
+    color: #d1d1d1;
+    z-index: 15;
 }
 
 .recently-updated h3 {
@@ -234,53 +233,22 @@ p {
     text-decoration: none;
     color: #9ba4b4;
     transition: 0.2s;
-    white-space: nowrap;         /* nu rupe titlurile pe mai multe linii */
-    overflow: hidden;           
-    text-overflow: ellipsis;     /* … dacă e prea lung */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .recently-updated a:hover {
     color: #ffffff;
 }
 
-.social-icons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px; /* sau 10px, ajustează după preferință */
-    position: relative;
-    top: -15px; /* ridică iconițele cu 15px față de poziția inițială */
-}
-
-.social-icons img {
-    width: 24px;
-    height: 24px;
-    opacity: 0.85;
-    transition: 0.25s;
-    filter: invert(26%) sepia(92%) saturate(4476%) hue-rotate(354deg) brightness(96%) contrast(103%);
-}
-
-.social-icons img:hover {
-    opacity: 1;
-    transform: scale(1.15);
-    filter: drop-shadow(0 0 6px #ff3b3b);
-}
-
-.sidebar a.active {
-    color: #ff3b3b;
-    font-weight: bold;
-    background-color: #191a22;
-    border-left: 4px solid #ff3b3b;
-}
-
-/* Project page */
-
+/* PROJECT CARDS */
 .project-list {
     margin-top: 30px;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* spațiu între carduri */
-    align-items: flex-start; /* cardurile se aliniază în stânga */
+    gap: 20px;
+    align-items: flex-start;
 }
 
 .project-card-wide {
@@ -288,8 +256,8 @@ p {
     border: 1px solid #292929;
     padding: 20px 25px;
     border-radius: 8px;
-    width: auto; /* nu mai ocupă 100% */
-    max-width: 700px; /* dimensiune maximă, ajustabilă */
+    width: auto;
+    max-width: 700px;
     transition: 0.3s;
 }
 
@@ -308,6 +276,7 @@ p {
     color: #d0d0d0;
 }
 
+/* BUTTONS & GITHUB LINK */
 .github-btn {
     display: inline-block;
     margin-top: 12px;
@@ -325,6 +294,7 @@ p {
     color: #101010;
 }
 
+/* PAGINATION */
 .pagination {
     margin-top: 20px;
     display: flex;
@@ -347,22 +317,9 @@ p {
     border-color: #ff3b3b;
 }
 
-/* Contact page  */
-
+/* CONTACT PAGE STYLES */
 .contact-page .content {
     max-width: 700px;
-}
-
-.content h1 {
-    font-size: 42px;
-    margin-bottom: 12px;
-    color: #ff3b3b;
-}
-
-.content p {
-    font-size: 18px;
-    color: #e6e6e6;
-    line-height: 1.6;
 }
 
 .content a {
@@ -375,61 +332,7 @@ p {
     text-shadow: 0 0 6px #ff3b3b;
 }
 
-/* Recently Updated Sidebar */
-.recently-updated {
-    position: fixed;
-    right: 20px;
-    top: 100px;
-    width: 300px;
-    background: transparent;
-    border-left: 1px solid #2a2a2a;
-    padding-left: 20px;
-    color: #d1d1d1;
-}
-
-.recently-updated h3 {
-    color: #ff3b3b;
-    margin-bottom: 10px;
-}
-
-.recently-updated ul {
-    list-style: none;
-    padding-left: 0;
-}
-
-.recently-updated li {
-    margin-bottom: 6px;
-}
-
-.recently-updated a {
-    text-decoration: none;
-    color: #9ba4b4;
-    transition: 0.2s;
-}
-
-.recently-updated a:hover {
-    color: #ffffff;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .content {
-        padding-left: 50px;
-        margin-right: 0 
-    }
-
-    .recently-updated {
-        position: static;
-        width: 100%;
-        border-left: none;
-        padding-left: 0;
-        margin-top: 40px;
-    }
-}
-
-
-/* Writeups */
-
+/* WRITEUPS */
 .writeups-container {
     display: flex;
     flex-direction: column;
@@ -471,41 +374,194 @@ p {
     font-size: 14px;
 }
 
-.pagination {
+/* ABOUT / CERTIFICATIONS / SKILLS */
+.certifications-content {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+.certifications-content h2 {
+    margin-bottom: 20px;
+}
+
+.certification-logo {
+    width: 60px;
+    height: auto;
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
+/* Skills icons grid */
+.skills-icons {
+    display: grid;
+    grid-template-columns: repeat(5, auto);
+    justify-content: start;
+    gap: 5px 15px;
     margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+.skill {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
-.pagination a {
-    padding: 6px 12px;
-    border: 1px solid #272727;
-    border-radius: 4px;
-    text-decoration: none;
+.skill img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    margin-bottom: 4px;
+}
+
+/* DEFAULT VISUAL TWEAKS */
+.content p,
+.content li,
+.content span {
     color: #9ba4b4;
-    transition: 0.2s;
 }
 
-.pagination a.active, .pagination a:hover {
-    background-color: #ff3b3b;
-    color: #ffffff;
-    border-color: #ff3b3b;
+/* ==================================================
+   RESPONSIVE RULES
+   ================================================== */
+
+/* Tablet and smaller (<=1024px) - minor adjustments */
+@media (max-width: 1024px) {
+    .sidebar { width: 200px; }
+    .content { padding-left: 260px; }
+    .recently-updated { width: 260px; right: 10px; }
+    h1 { font-size: 36px; }
 }
 
-/* Responsive */
+/* Mobile & small tablet (<=768px) - MAIN RESPONSIVE LAYOUT */
 @media (max-width: 768px) {
-    .writeup-card {
+
+    /* Layout: stack elements vertically */
+    body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Make sidebar a top horizontal bar that can wrap / scroll */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        padding: 10px 10px 8px 10px;
+        border-right: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .sidebar h2 {
+        margin: 0 12px 0 12px;
+        font-size: 18px;
+    }
+
+    .sidebar a {
+        padding: 8px 12px;
+        font-size: 16px;
+        border-left: none;
+        border-radius: 6px;
+        background: transparent;
+    }
+
+    .sidebar a.active {
+        background-color: rgba(255,59,59,0.08);
+        border-left: none;
+        box-shadow: inset 0 0 0 1px rgba(255,59,59,0.04);
+    }
+
+    /* content area becomes full width with smaller paddings */
+    .content {
+        padding: 20px;
+        padding-left: 20px;
+        margin-right: 0;
+    }
+
+    /* hide the fixed right sidebar - move content below naturally if needed */
+    .recently-updated {
+        display: none;
+        position: static;
+        width: 100%;
+    }
+
+    /* Terminal full width */
+    .terminal {
+        width: 100%;
         max-width: 100%;
+        height: 260px;
+        margin-top: 30px;
+    }
+
+    /* Reduce fonts a bit on mobile */
+    h1 { font-size: 32px; }
+    p { font-size: 16px; max-width: 100%; }
+
+    /* Skills grid smaller */
+    .skills-icons {
+        grid-template-columns: repeat(3, auto);
+        gap: 6px 10px;
+    }
+
+    .project-card-wide,
+    .writeup-card,
+    .project-list > * {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .github-btn { font-size: 13px; padding: 6px 10px; }
+
+    .user { display: none; } /* hide user small label in terminal bar to save space */
+}
+
+/* Small phones (<=480px) - more compact */
+@media (max-width: 480px) {
+
+    .sidebar {
+        padding: 8px 8px;
+        gap: 8px;
+    }
+
+    .sidebar h2 { font-size: 16px; }
+    .sidebar a { font-size: 15px; padding: 8px 10px; }
+
+    .content {
+        padding: 16px;
+        padding-left: 16px;
+    }
+
+    h1 { font-size: 28px; }
+    p { font-size: 15px; }
+
+    .terminal {
+        height: 220px;
+    }
+
+    .skills-icons {
+        grid-template-columns: repeat(2, auto);
+        gap: 6px 8px;
+    }
+
+    .social-icons img { width: 20px; height: 20px; }
+
+    .promptUser, .promptLocation, .promptBling { font-size: 14px; }
+    .terminalInput { font-size: 14px; }
+
+    .project-card-wide, .writeup-card {
+        padding: 14px;
     }
 }
 
-.content {
-    display: flex;
-    flex-direction: column;
-    min-height: 80vh; /* ajustează dacă ai nevoie */
+/* Accessibility / small tweaks */
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
 }
 
-.project-list {
-    flex-grow: 1; /* împinge pagination în jos */
-}
-
+/* End of file */
