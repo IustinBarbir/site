@@ -64,3 +64,17 @@ code {
     overflow-x: auto;
 }
 
+body {
+    padding-left: 230px; /* lățimea sidebar-ului tău */
+}
+
+/* Pe mobil sidebar-ul devine slide-over → scoatem paddingul */
+@media (max-width: 768px) {
+    body {
+        padding-left: 0;
+    }
+
+    #writeup-container {
+        padding: 20px;
+    }
+}
