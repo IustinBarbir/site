@@ -509,3 +509,42 @@ p {
     flex-grow: 1; /* împinge pagination în jos */
 }
 
+/* Hamburger button */
+#mobile-menu-button {
+    display: none;
+    font-size: 2rem;
+    color: #ff3b3b;
+    padding: 15px;
+    cursor: pointer;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 2000;
+}
+
+/* Sidebar hidden on mobile */
+@media (max-width: 768px) {
+
+    /* show hamburger */
+    #mobile-menu-button {
+        display: block;
+    }
+
+    /* sidebar hidden initially */
+    #sidebar {
+        transform: translateX(-260px); /* ascuns la stânga */
+        transition: transform 0.3s ease;
+        z-index: 1500;
+    }
+
+    /* sidebar open state */
+    #sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* prevent content from sliding */
+    body.sidebar-open {
+        overflow: hidden;
+    }
+}
+

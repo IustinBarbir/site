@@ -1,13 +1,20 @@
-/* Page container */
-#writeup-container {
-    padding: 5rem 2rem;
-    color: #e5e5e5;
-    background-color: #1a1b20;
+/* Predictable box sizing so padding doesn't blow out widths */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
+/* Page container - default (mobile / small screens) */
+#writeup-container {
+    padding: 80px 20px;       /* narrow horizontal padding for centered content on small screens */
+    color: #e5e5e5;
+    background-color: #1a1b20;
+    width: 100%;
+}
+
+/* Keep the inner content constrained and centered */
 .writeup-content {
     max-width: 900px;
-    margin: auto;
+    margin: 0 auto;
 }
 
 /* Titles */
@@ -53,14 +60,17 @@ code {
     font-size: .95rem;
 }
 
-#writeup-container {
-    padding: 80px 340px 80px 260px; /* top-right-bottom-left */
-    color: #e5e5e5;
-    max-width: 900px;
-    margin: auto; /* center între sidebars */
+/* Desktop: reserve space for left & right sidebars only on wide screens */
+@media (min-width: 1100px) {
+    /* keep big paddings only on wider viewports */
+    #writeup-container {
+        padding: 80px 340px 80px 260px; /* top right bottom left */
+    }
 }
 
-#writeup-container pre {
-    overflow-x: auto;
+/* Optional: tighten on medium widths if you want */
+@media (min-width: 900px) and (max-width: 1099px) {
+    #writeup-container {
+        padding: 80px 60px; /* moderate padding on medium screens */
+    }
 }
-
