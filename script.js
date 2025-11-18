@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     openBtn.addEventListener('click', () => {
       terminal.style.display = 'block';
       openBtn.style.display = 'none';
+      // focus input when user explicitly opens terminal (safe on mobile)
+      if (input) input.focus();
     });
   }
 
@@ -126,5 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     });
+  }
+
+  // Focus terminal input on load only for larger viewports (prevent mobile auto-zoom)
+  if (input && terminal) {
+    // focus only when viewport is wider than 768px (desktop/tablet)
+    if (window.innerWidth > 768) {
+      input.focus();
+    }
+    // NOTE: if the user opens the terminal via the UI on mobile, we still focus above in the open button handler
   }
 });
