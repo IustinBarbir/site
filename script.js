@@ -8,12 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const terminal = document.querySelector('.terminal');
   const openBtn = document.getElementById('openTerminal');
 
+  // Use an absolute path to your actual CV file to avoid relative-path issues
+  const CV_PATH = 'IustinBarbirCV.pdf';
+  const CV_FILENAME = 'IustinBarbirCV.pdf';
+
   if (input && output && terminalBody) {
     const commands = {
       help: "Available commands: help, about, projects, contact, get cv, clear",
-      about: "I'm [Your Name], passionate about cybersecurity.",
+      about: "I'm Iustin, this is my portofolio",
       projects: "Check out my projects in the 'Projects' section above.",
-      contact: "Email: your.email@example.com | LinkedIn: @username | do 'get cv' for my CV",
+      contact: "Email: iustin_barbir@yahoo.ro | LinkedIn: Iustin Barbir | do 'get cv' for my CV",
       clear: ""
     };
 
@@ -28,12 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (awaitingCVChoice) {
         if (command === 't') {
-          window.open('CV.pdf', '_blank');
+          window.open(CV_PATH, '_blank');
           output.innerHTML += `<div>Opening CV in a new tab...</div>`;
         } else if (command === 'd') {
           const link = document.createElement('a');
-          link.href = 'CV.pdf';
-          link.download = 'CV.pdf';
+          link.href = CV_PATH;
+          link.download = CV_FILENAME;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -132,10 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Focus terminal input on load only for larger viewports (prevent mobile auto-zoom)
   if (input && terminal) {
-    // focus only when viewport is wider than 768px (desktop/tablet)
     if (window.innerWidth > 768) {
       input.focus();
     }
-    // NOTE: if the user opens the terminal via the UI on mobile, we still focus above in the open button handler
   }
 });
