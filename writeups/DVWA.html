@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVWA — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>DVWA</h1>
+
+        <p>Starting the machine (after config is done)</p>
+
+        <pre><code>sudo service apache2 start
+service mariadb start</code></pre>
+
+        <p>reset database after logging in with default credentials (admin - password)</p>
+
+        <p>For brute forcing, I tried using Hydra in the beginning, but it turned out to be a bad decision. Either my lack of experience or other factors led to about one hour of trying to fix a command, which did not work even in the end</p>
+
+        <pre><code>hydra 10.0.2.15 -L user.txt -P pass.txt http-get-form "/DVWA/vulnerabilities/brute/:username=^USER^&password=^PASS^&Login=Login:Username and/or password incorrect.H=Cookie: PHPSESSID=3n0mhopq9dvv2i66udhgpeqnmi; security=low"</code></pre>
+
+        <p>A simplified command, without the Cookie resulted in false positives, categorizing every entry as successful.</p>
+
+        <pre><code>hydra 10.0.2.15 -L user.txt -P pass.txt http-get-form "/DVWA/vulnerabilities/brute/:username=^USER^&password=^PASS^&Login=Login:Username and/or password incorrect.
+1 of 1 target successfully completed, 18 valid passwords found</code></pre>
+
+        <p>That is why I decided to use Burp, which is more reliable for web login brute-forces anyways, according to some sources I have encounted while trying to fix the command above.</p>
+
+        <p>This required intercepting the request for wrong credentials (test & test) in my case, sending it to intruder where the username and password were set as variables and the Attack Type was set to Cluster Bomb, and adding a word list for each of those variables using the "payloads" section.</p>
+
+        <p>In the end, it was enough to sort the results by Length, as the correct pair had a different length compared to all the other tries.</p>
+
+        <p>To further visualize the result, I also used the "show response in browser" option, which proved that the attack worked as intended: "Welcome to the password protected area admin"</p>
+
+    </div>
+</section>
+
+</body>
+</html>

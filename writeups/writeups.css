@@ -1,23 +1,19 @@
-/* Predictable box sizing so padding doesn't blow out widths */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
-/* Page container - default (mobile / small screens) */
 #writeup-container {
-    padding: 80px 20px;       /* narrow horizontal padding for centered content on small screens */
+    padding: 80px 20px;       
     color: #e5e5e5;
     background-color: #1a1b20;
     width: 100%;
 }
 
-/* Keep the inner content constrained and centered */
 .writeup-content {
     max-width: 900px;
     margin: 0 auto;
 }
 
-/* Titles */
 .writeup-content h1 {
     font-size: 2.7rem;
     text-align: center;
@@ -32,7 +28,6 @@
     color: #ff3b3b;
 }
 
-/* Paragraphs & Lists */
 .writeup-content p,
 .writeup-content li {
     line-height: 1.7;
@@ -43,7 +38,6 @@
     margin-left: 1.3rem;
 }
 
-/* Command / code blocks */
 pre {
     background-color: #111;
     padding: 1rem;
@@ -60,17 +54,14 @@ code {
     font-size: .95rem;
 }
 
-/* Desktop: reserve space for left & right sidebars only on wide screens */
 @media (min-width: 1100px) {
-    /* keep big paddings only on wider viewports */
     #writeup-container {
-        padding: 80px 340px 80px 260px; /* top right bottom left */
+        padding: 80px 340px 80px 260px; 
     }
 }
 
-/* Optional: tighten on medium widths if you want */
 @media (min-width: 900px) and (max-width: 1099px) {
     #writeup-container {
-        padding: 80px 60px; /* moderate padding on medium screens */
+        padding: 80px 60px;
     }
 }

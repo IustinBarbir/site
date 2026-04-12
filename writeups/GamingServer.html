@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamingServer — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>GamingServer</h1>
+
+        <p>Another room, training for web app pentesting</p>
+
+        <p>After nmap scan, only SSH and HTTP open</p>
+
+        <p>Dirb found two directories:</p>
+        <pre><code>/secret 
+/uploads</code></pre>
+
+        <p>Uploads had manifesto.txt, which did not provide a lot of information, but I got a possible username</p>
+        <pre><code>+++The Mentor+++</code></pre>
+
+        <p>There was also dict.lst, which contained a list of possible passwords. Downloaded them tried to brute force ssh for Mentor</p>
+
+        <p>/secret, however, had a file called secretKey, which is exactly what it sounds like. Downloaded this file too, as I know there could be a way to exploit ssh login using this, but i dont remember exactly how</p>
+
+        <p>Nevermind, I got it, it was not that hard.</p>
+
+        <pre><code>ssh2john id_rsa > hash.txt</code></pre>
+
+        <p>then, after john hash.txt, i got the password: letmein</p>
+
+        <p>Now, what is the username? all kinds of combinations for Mentor/TheMentor/thementor etc did not work.</p>
+
+        <p>However, on page source I got a possible username:</p>
+        <pre><code>john, please add some actual content to the site! lorem ipsum is horrible to look at.</code></pre>
+
+        <p>now, since we have all these, we can ssh into john</p>
+        <pre><code>chmod 600 id_rsa
+ssh -i id_rsa john@$IP</code></pre>
+
+        <p>After getting the flag (just ls and cat flag.txt), I did "id" to see my privileges</p>
+
+        <pre><code>john is in the lxd group</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>

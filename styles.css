@@ -8,7 +8,6 @@ body {
     display: flex;
 }
 
-/* SIDEBAR */
 .sidebar {
     width: 230px;
     background-color: #13141b;
@@ -44,7 +43,6 @@ body {
     border-left: 4px solid #ff3b3b;
 }
 
-/* CONTENT */
 .content {
     padding: 80px;
     padding-left: 300px;
@@ -63,7 +61,6 @@ p {
     max-width: 600px;
 }
 
-/* TERMINAL */
 .terminal {
     width: 75%;
     max-width: 800px;
@@ -75,7 +72,6 @@ p {
     box-shadow: 0 0 12px rgba(0,0,0,0.6);
 }
 
-/* BARĂ SUPERIOARĂ */
 .bar {  
     display: flex;
     height: 30px;
@@ -105,7 +101,6 @@ p {
 
 .user { color: #d1d1d1; margin-left: 6px; font-size: 14px; }
 
-/* TERMINAL BODY - culoare mai evidentă și border jos */
 .terminalBody {
     background: #1a1c25; /* mai evident față de fundal */
     height: calc(100% - 30px);
@@ -121,7 +116,6 @@ p {
     box-sizing: border-box;
 }
 
-/* PROMPT */
 .prompt {
     display: flex;
     align-items: center;
@@ -146,8 +140,6 @@ p {
 }
 
 
-/* about page */
-
 .certifications-content {
     margin-top: 40px;
     margin-bottom: 40px;
@@ -166,9 +158,9 @@ p {
 
 .skills-icons {
     display: grid;
-    grid-template-columns: repeat(5, auto); /* 5 skill-uri pe rând, lățime automată */
-    justify-content: start; /* aliniere la stânga */
-    gap: 5px 15px; /* vertical 5px, orizontal 15px */
+    grid-template-columns: repeat(5, auto); 
+    justify-content: start; 
+    gap: 5px 15px; 
     margin-top: 20px;
     margin-bottom: 40px;
 }
@@ -176,12 +168,12 @@ p {
 .skill {
     display: flex;
     flex-direction: column;
-    align-items: center; /* imagine și text centrate pe coloană */
+    align-items: center; 
     text-align: center;
 }
 
 .skill img {
-    width: 50px;   /* mai mic pentru a încăpea toate imagini pe rând */
+    width: 50px;   
     height: 50px;
     object-fit: contain;
     margin-bottom: 4px;
@@ -202,16 +194,15 @@ p {
     }
 }
 
-/* RIGHT SIDEBAR - RECENTLY UPDATED */
 .recently-updated {
     position: fixed;
     right: 0;
-    top: 80px; /* astfel nu urcă până în vârf, arată mai elegant */
+    top: 80px; 
     width: 300px;
     padding-left: 25px;
     padding-top: 5px;
     padding-bottom: 5px;
-    border-left: 1px solid #2a2a2a; /* linie discretă */
+    border-left: 1px solid #2a2a2a; 
 }
 
 .recently-updated h3 {
@@ -234,9 +225,9 @@ p {
     text-decoration: none;
     color: #9ba4b4;
     transition: 0.2s;
-    white-space: nowrap;         /* nu rupe titlurile pe mai multe linii */
+    white-space: nowrap;         
     overflow: hidden;           
-    text-overflow: ellipsis;     /* … dacă e prea lung */
+    text-overflow: ellipsis;     
 }
 
 .recently-updated a:hover {
@@ -247,9 +238,9 @@ p {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 20px; /* sau 10px, ajustează după preferință */
+    margin-top: 20px; 
     position: relative;
-    top: -15px; /* ridică iconițele cu 15px față de poziția inițială */
+    top: -15px; 
 }
 
 .social-icons img {
