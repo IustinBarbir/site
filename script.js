@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const openBtn = document.getElementById('openTerminal');
 
   // Use an absolute path to your actual CV file to avoid relative-path issues
-  const CV_PATH = 'IustinBarbirCV.pdf';
-  const CV_FILENAME = 'IustinBarbirCV.pdf';
+  const CV_PATH = 'IustinBarbirCV-EthicalHacker.pdf';
+  const CV_FILENAME = 'IustinBarbirCV-EthicalHacker.pdf';
 
   if (input && output && terminalBody) {
     const commands = {
