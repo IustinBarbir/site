@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Support</h1>
+
+        <p>Support</p>
+
+        <p>nmap scan showed many open ports</p>
+
+        <pre><code>──(glitch㉿Kali)-[~]
+└─$ sudo nmap -sC -sV -A -T4 -p- 10.129.230.181
+[sudo] password for glitch:
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-06-15 18:15 EEST
+Nmap scan report for 10.129.230.181 (10.129.230.181)
+Host is up (0.046s latency).
+Not shown: 65516 filtered tcp ports (no-response)
+
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+49664/tcp open  msrpc
+49668/tcp open  msrpc
+49674/tcp open  ncacn_http
+49679/tcp open  msrpc
+49699/tcp open  msrpc
+49737/tcp open  msrpc</code></pre>
+
+        <p>Task 1</p>
+
+        <p>How many shares is Support showing on SMB?</p>
+
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ smbclient -N -L 10.129.230.181
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share
+        support-tools   Disk      support staff tools
+        SYSVOL          Disk      Logon server share
+
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.129.230.181 failed
+(Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available</code></pre>
+
+        <p>So 6 shares</p>
+
+        <p>Task 2</p>
+
+        <p>Which share is not a default share for a Windows domain controller?</p>
+
+        <pre><code>support-tools</code></pre>
+
+        <p>Task 3</p>
+
+        <p>Almost all of the files in this share are publicly available tools, but one is not. What is the name of that file?</p>
+
+        <p>connected to the share as listed all of the files</p>
+
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ smbclient \\\\10.129.230.181\\support-tools
+Password for [WORKGROUP\glitch]:
+Try "help" to get a list of possible commands.
+
+smb: \> ls
+  .                                   D        0  Wed Jul 20 20:01:06 2022
+  ..                                  D        0  Sat May 28 14:18:25 2022
+  7-ZipPortable_21.07.paf.exe         A  2880728
+  npp.8.4.1.portable.x64.zip          A  5439245
+  putty.exe                           A  1273576
+  SysinternalsSuite.zip               A 48102161
+  UserInfo.exe.zip                    A   277499
+  windirstat1_1_2_setup.exe           A    79171
+  WiresharkPortable64_3.6.5.paf.exe   A 44398000
+
+                4026367 blocks of size 4096.
+                971036 blocks available</code></pre>
+
+        <p>my initial though was putty.exe, but it turns out this is just a ssh and telnet client for windows</p>
+
+        <p>Hoever, UserInfo.exe.zip was not a common file. A google search resulted in "Malware analysis UserInfo.exe.zip Malicious activity" and similar results.</p>
+
+        <pre><code>UserInfo.exe.zip</code></pre>
+
+        <p>Task 4</p>
+
+        <p>What is the hardcoded password used for LDAP in the UserInfo.exe binary?</p>
+
+        <p>I used ILSpy in order to be able to open the file and read the code</p>
+
+        <p>There is the Ldap function</p>
+
+        <pre><code>public LdapQuery()
+{
+    string password = Protected.getPassword();
+    entry = new DirectoryEntry(
+        "LDAP://support.htb",
+        "support\\ldap",
+        password
+    );
+    entry.set_AuthenticationType((AuthenticationTypes)1);
+    ds = new DirectorySearcher(entry);
+}</code></pre>
+
+        <p>But there is also a Protected class, which contains the passowrd</p>
+
+        <pre><code>internal class Protected
+{
+    private static string enc_password =
+    "0Nv32PTwgYjzg9/8j5TbmvPd3e7WhtWWyuPsyO76/Y+U193E";
+
+    private static byte[] key =
+    Encoding.ASCII.GetBytes("armando");
+
+    public static string getPassword()
+    {
+        byte[] array =
+        Convert.FromBase64String(enc_password);
+
+        byte[] array2 = array;
+
+        for (int i = 0; i < array.Length; i++)
+        {
+            array2[i] =
+            (byte)((uint)(array[i] ^
+            key[i % key.Length]) ^ 0xDFu);
+        }
+
+        return Encoding.Default.GetString(array2);
+    }
+}</code></pre>
+
+        <p>The encoding seems to be done as follows:</p>
+
+        <p>1. enc_password string is Base64 decoded and placed into a byte array</p>
+        <p>2. a 2nd byte array "array2" is created with the same value as "array"</p>
+        <p>3. in a loop, it goes through each charather in "array" and it does XOR with one letter of the key, then with the byte 0xDFu</p>
+        <p>4. it return the decrypted key</p>
+
+        <p>The decryption can be done using a python script</p>
+
+        <pre><code>import base64
+from itertools import cycle
+
+enc_password = base64.b64decode(
+"0Nv32PTwgYjzg9/8j5TbmvPd3e7WhtWWyuPsyO76/Y+U193E"
+)
+
+key = b"armando"
+key2 = 223
+res = ''
+
+for e, k in zip(enc_password, cycle(key)):
+    res += chr(e ^ k ^ key2)
+
+print(res)</code></pre>
+
+        <pre><code>┌──(glitch㉿Kali)-[~/Downloads/artifacts/linux-x64]
+└─$ python3 decode.py
+
+nvEfEK16^1aM4$e7AclUf8x$tRWxPWO1%lmz</code></pre>
+
+        <p>Task 5</p>
+
+        <p>Which field in the LDAP data for the user named support stands out as potentially holding a password?</p>
+
+        <p>ran the binary using wine, and captured packets using wireshark</p>
+
+        <pre><code>wine UserInfo.exe -v find -first "administrator"</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>

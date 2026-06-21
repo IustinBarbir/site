@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+        <h1>Appointment</h1>
+
+        <p>Appointment - Hack the box</p>
+
+        <p>Task 1</p>
+
+        <p>What does the acronym SQL stand for?</p>
+
+        <p>Structured Query Language</p>
+
+        <p>Task 2</p>
+
+        <p>What is one of the most common type of SQL vulnerabilities?</p>
+
+        <p>sql injection</p>
+
+        <p>Task 4</p>
+
+        <p>What is the 2021 OWASP Top 10 classification for this vulnerability?</p>
+
+        <p>A03:2021-Injection</p>
+
+        <p>Task 5</p>
+
+        <p>What does Nmap report as the service and version that are running on port 80 of the target?</p>
+
+        <pre><code>└─$ sudo nmap -sC -sV -A -T4 10.129.53.100
+
+└─$ sudo nmap -sC -sV -A -T4 10.129.53.100
+[sudo] password for glitch:
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-06-19 23:50 EEST
+Nmap scan report for 10.129.53.100 (10.129.53.100)
+Host is up (0.052s latency).
+Not shown: 999 closed tcp ports (reset)
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-title: Login
+|_http-server-header: Apache/2.4.38 (Debian)
+
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+
+Network Distance: 2 hops
+
+TRACEROUTE (using port 143/tcp)
+HOP RTT      ADDRESS
+1   51.58 ms 10.10.14.1 (10.10.14.1)
+2   53.82 ms 10.129.53.100 (10.129.53.100)
+
+OS and Service detection performed.
+Nmap done: 1 IP address (1 host up) scanned in 21.99 seconds</code></pre>
+
+        <p>Apache httpd 2.4.38 ((Debian))</p>
+
+        <p>Task 6</p>
+
+        <p>What is the standard port used for the HTTPS protocol?</p>
+
+        <p>443</p>
+
+        <p>Task 7</p>
+
+        <p>What is a folder called in web-application terminology?</p>
+
+        <p>directory</p>
+
+        <p>Task 8</p>
+
+        <p>What is the HTTP response code that is returned for Not Found errors?</p>
+
+        <p>404</p>
+
+        <p>Task 9</p>
+
+        <p>Gobuster is one tool used to brute force directories on a webserver. What switch do we use with Gobuster to specify we're looking to discover directories, and not subdomains?</p>
+
+        <p>dir</p>
+
+        <p>Task 10</p>
+
+        <p>What single character can be used to comment out the rest of a line in MySQL?</p>
+
+        <p>#</p>
+
+        <p>Task 11</p>
+
+        <p>If user input is not handled carefully, it could be interpreted as a comment. Use a comment to login as admin without knowing the password. What is the first word on the webpage returned?</p>
+
+        <pre><code>admin'#
+test</code></pre>
+
+        <p>' closes the username field $username=$_POST['username']</p>
+
+        <p># comments the rest of the line, as we've seen in the previous task</p>
+
+        <p>Congratulations!</p>
+
+        <p>Your flag is: e3d0796d002a446c0e622226f42e9672</p>
+
+    </div>
+</section>
+
+</body>
+</html>
